@@ -13,13 +13,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/*Several Todos:
+* - create dummy data, or Fake Test to TodoRepositoryTest (testUnit)
+* - also implement all methods under TaskSourceData
+* - make sure all the test got passed
+* */
 class TodoRepository(
     private val taskDao: TaskDao,
     private val appCoroutine: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : TaskSourceData {
 
-    override suspend fun observeTasks(): Flow<Result<List<TaskModel>>> {
+    override fun observeTasks(): Flow<Result<List<TaskModel>>> {
         return taskDao.findAll().map { value ->
             Result.Success(value.asDomainsModel())
         }

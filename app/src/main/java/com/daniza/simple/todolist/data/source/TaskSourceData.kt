@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface TaskSourceData {
 
-    suspend fun observeTasks(): Flow<Result<List<TaskModel>>>
+    fun observeTasks(): Flow<Result<List<TaskModel>>>
 
     suspend fun getTask(taskId: Int): Flow<Result<TaskModel>>
 
