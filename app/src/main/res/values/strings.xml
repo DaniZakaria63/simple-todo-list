@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Simple Todo List</string>
+    <string name="expand_more">Show More</string>
+    <string name="expand_less">Show Less</string>
 </resources>

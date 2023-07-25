@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,6 +28,8 @@ class TodoRepository(
     override fun observeTasks(): Flow<Result<List<TaskModel>>> {
         return taskDao.findAll().map { value ->
             Result.Success(value.asDomainsModel())
+        }.catch {
+            Result.Error(Throwable("Check your database for tasks table"))
         }
     }
 
