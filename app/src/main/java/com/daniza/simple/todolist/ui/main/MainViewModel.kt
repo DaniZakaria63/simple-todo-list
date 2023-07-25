@@ -13,6 +13,7 @@ import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.ui.widget.task.TaskUiState
 import com.daniza.simple.todolist.ui.widget.task.UiState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -25,42 +26,60 @@ import kotlinx.coroutines.flow.shareIn
 class MainViewModel(
     private val repository: TodoRepository
 ) : ViewModel() {
+
     /*its okay to make all saved data always hot*/
 //    val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
-    val allListData: SharedFlow<TaskUiState> get() = repository.observeTasks()
-        .map { result->
-            when (result){
-                is Result.Loading -> TaskUiState(isLoading = true)
-                is Result.Success -> TaskUiState(taskDatas = result.data)
-                is Result.Error -> TaskUiState(isError = true)
-            }
-        }.shareIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed()
-        )
+    val allListData: SharedFlow<TaskUiState>
+        get() = repository.observeTasks()
+            .map { result ->
+                when (result) {
+                    is Result.Loading -> TaskUiState(isLoading = true)
+                    is Result.Success -> TaskUiState(taskDatas = result.data)
+                    is Result.Error -> TaskUiState(isError = true)
+                }
+            }.shareIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed()
+            )
+
+    val singleTask: TaskModel
+        get() = updateStateTask(null) ?: TaskModel(id = 0) // dummy
+
+    fun updateStateTask(task: TaskModel?): TaskModel? = task
+
+
+    fun forceRefresh() {
+        repository.refresh()
+    }
 
 
     fun updateCheckedTask(task: TaskModel, check: Boolean) {
-
+        task.checked = check
+        repository.updateTask(task)
     }
 
-    fun saveNewTask(task: TaskModel){
-
+    /*TODO: validity later about the parameter*/
+    fun saveNewTask(task: TaskModel) {
+        repository.saveTask(task)
     }
 
-    fun editTask(task: TaskModel){
-
+    /*TODO: later got watched by flow*/
+    fun editTask(task: TaskModel) {
+        repository.updateTask(task)
     }
 
-    fun deleteTask(task: TaskModel){
-
+    /*TODO: just delete*/
+    fun deleteTask(task: TaskModel) {
+        repository.deleteTask(task)
+        forceRefresh()
     }
+
 
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val application: TodoApplication =(this[APPLICATION_KEY]) as TodoApplication
+                val application: TodoApplication = (this[APPLICATION_KEY]) as TodoApplication
                 MainViewModel(application.repository)
             }
         }

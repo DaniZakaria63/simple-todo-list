@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SimpleTodoListTheme {
-
+                MainScreen(viewModel = mainViewModel)
             }
         }
     }

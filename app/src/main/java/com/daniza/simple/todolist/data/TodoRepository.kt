@@ -47,6 +47,10 @@ class TodoRepository(
         }
     }
 
+    fun refresh(){
+        observeTasks()
+    }
+
     override fun setActiveStatus(task: TaskModel, status: Boolean) {
 
     }

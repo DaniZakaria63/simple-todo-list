@@ -34,8 +34,8 @@ import com.daniza.simple.todolist.data.model.TaskModel
 fun TaskItem(
     task: TaskModel,
     onCheckedChange: (Boolean) -> Unit,
-    onEditClicked: (TaskModel) -> Unit,
-    onDeleteClicked: (TaskModel) -> Unit,
+    onEditClicked: () -> Unit,
+    onDeleteClicked: () -> Unit,
 ) {
     var expanded by remember {
         mutableStateOf(false)
@@ -61,10 +61,10 @@ fun TaskItem(
                 Text(text = task.description)
                 Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
 
-                    Button(onClick = { onDeleteClicked(task) }) {
+                    Button(onClick = onDeleteClicked) {
                         Text(text = "Delete")
                     }
-                    Button(onClick = { onEditClicked(task) }) {
+                    Button(onClick = onEditClicked) {
                         Text(text = "Edit")
                     }
                 }

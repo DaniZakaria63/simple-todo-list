@@ -13,11 +13,11 @@ import com.daniza.simple.todolist.data.model.TaskModel
 
 @Composable
 fun TaskList(
-    modifier: Modifier = Modifier,
     listTask: List<TaskModel>,
     onCheckedTask: (TaskModel, Boolean) -> Unit,
     onDeleteTask: (TaskModel) -> Unit,
     onEditTask: (TaskModel) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier) {
         items(items = listTask, key = { task -> task.id }) { item ->
@@ -25,8 +25,8 @@ fun TaskList(
                 TaskItem(
                     task = item,
                     onCheckedChange = { check -> onCheckedTask(item, check) },
-                    onDeleteClicked = onDeleteTask,
-                    onEditClicked = onEditTask
+                    onDeleteClicked = { onDeleteTask(item)},
+                    onEditClicked = { onEditTask(item) }
                 )
                 Divider(color = Color.DarkGray)
             }
