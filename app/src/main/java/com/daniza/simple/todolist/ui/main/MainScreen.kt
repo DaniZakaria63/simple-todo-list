@@ -1,5 +1,6 @@
 package com.daniza.simple.todolist.ui.main
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,17 +29,16 @@ import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.ui.splash.SplashScreen
 import com.daniza.simple.todolist.ui.widget.common.ErrorScreen
 import com.daniza.simple.todolist.ui.widget.common.LoadingScreen
-import com.daniza.simple.todolist.ui.widget.task.DialogDeleteTask
-import com.daniza.simple.todolist.ui.widget.task.DialogEditTask
-import com.daniza.simple.todolist.ui.widget.task.DialogNewTask
 import com.daniza.simple.todolist.ui.widget.task.Status
+import com.daniza.simple.todolist.ui.widget.task.TaskDialog
+import com.daniza.simple.todolist.ui.widget.task.TaskDialogType
 import com.daniza.simple.todolist.ui.widget.task.TaskList
 import com.daniza.simple.todolist.ui.widget.task.TaskUiState
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     Surface(color = MaterialTheme.colorScheme.primary) {
-        var showSplashScreen by remember { mutableStateOf(true) }
+        var showSplashScreen by remember { mutableStateOf(false) }
         if (showSplashScreen) {
             SplashScreen {
                 showSplashScreen = false
@@ -52,12 +51,13 @@ fun MainScreen(viewModel: MainViewModel) {
 
 
 @Composable
-fun TodoListScene(
+private fun TodoListScene(
     modifier: Modifier = Modifier,
     mainViewModel: MainViewModel = viewModel()
 ) {
 
     var showDialog by remember { mutableStateOf("") }
+    var stateTask by remember { mutableStateOf(TaskModel()) }
 
     val listTask: TaskUiState by mainViewModel.allListData.collectAsStateWithLifecycle(
         initialValue = TaskUiState(isLoading = true)
@@ -69,27 +69,35 @@ fun TodoListScene(
 
     /* Show the dialog first, double checking */
     when (showDialog) {
-        "DELETE" -> DialogDeleteTask(
-            taskModel = mainViewModel.singleTask,
+        "DELETE" -> TaskDialog(
+            TaskDialogType.DELETE,
+            taskModel = stateTask,
             callback = { model, status ->
-                if (status.equals(Status.DATA)) mainViewModel.deleteTask(model);showDialog = ""
+                if (status == Status.DATA) mainViewModel.deleteTask(model);showDialog = ""
             })
 
-        "EDIT" -> DialogEditTask(taskModel = mainViewModel.singleTask, callback = { model, status ->
-            if (status.equals(Status.DATA)) mainViewModel.editTask(model);showDialog = ""
-        })
+        "EDIT" -> TaskDialog(
+            TaskDialogType.EDIT,
+            taskModel = stateTask,
+            callback = { model, status ->
+                Log.d("ASD", "TodoListScene: $status")
+                if (status == Status.DATA) mainViewModel.editTask(stateTask,model);showDialog = ""
+            })
 
-        "NEW" -> DialogNewTask { model, status ->
-            if (status.equals(Status.DATA)) mainViewModel.saveNewTask(model);showDialog = ""
-        }
+        "NEW" -> TaskDialog(
+            TaskDialogType.NEW,
+            taskModel = TaskModel(id = 0),
+            callback = { model, status ->
+                if (status == Status.DATA) mainViewModel.saveNewTask(model);showDialog = ""
+            })
     }
 
     when (listTask.status) {
         Status.DATA -> TodoListContent(
             listTask = listTask.taskDatas!!,
             onCheckedTask = onCheckedTask,
-            onDeleteTask = { task -> showDialog = "DELETE";mainViewModel.updateStateTask(task) },
-            onEditTask = { task -> showDialog = "EDIT";mainViewModel.updateStateTask(task) },
+            onDeleteTask = { task -> showDialog = "DELETE";stateTask = task },
+            onEditTask = { task -> showDialog = "EDIT";stateTask = task },
             onNewTask = { showDialog = "NEW" }
         )
 
@@ -103,7 +111,7 @@ fun TodoListScene(
 }
 
 @Composable
-fun TodoListContent(
+private fun TodoListContent(
     listTask: List<TaskModel>,
     onCheckedTask: (TaskModel, Boolean) -> Unit,
     onDeleteTask: (TaskModel) -> Unit,

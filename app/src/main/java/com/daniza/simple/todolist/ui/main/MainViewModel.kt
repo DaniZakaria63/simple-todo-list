@@ -54,6 +54,7 @@ class MainViewModel(
 
 
     fun updateCheckedTask(task: TaskModel, check: Boolean) {
+        task.isFinished = check
         task.checked = check
         repository.updateTask(task)
     }
@@ -63,17 +64,19 @@ class MainViewModel(
         repository.saveTask(task)
     }
 
-    /*TODO: later got watched by flow*/
-    fun editTask(task: TaskModel) {
-        repository.updateTask(task)
+    fun editTask(task: TaskModel, newTask: TaskModel) {
+        newTask.apply {
+            id = task.id
+            dateCreated = task.dateCreated
+            isFinished = task.isFinished
+        }
+        repository.updateTask(newTask)
     }
 
-    /*TODO: just delete*/
+    /*just delete*/
     fun deleteTask(task: TaskModel) {
         repository.deleteTask(task)
-        forceRefresh()
     }
-
 
 
     companion object {
