@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 fun LoadingScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.align(Alignment.Center)
         )
     }

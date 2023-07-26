@@ -10,6 +10,7 @@ import com.daniza.simple.todolist.TodoApplication
 import com.daniza.simple.todolist.data.TodoRepository
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.source.Result
+import com.daniza.simple.todolist.data.source.TaskRepository
 import com.daniza.simple.todolist.ui.widget.task.TaskUiState
 import com.daniza.simple.todolist.ui.widget.task.UiState
 import kotlinx.coroutines.flow.Flow
@@ -19,16 +20,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 
-/*Several Todos:
-* - for testing purpose, use FakeTodoRepository and FakeDataSource
-* - making sure all the test phase got passed
-* */
 class MainViewModel(
-    private val repository: TodoRepository
+    private val repository: TaskRepository
 ) : ViewModel() {
 
     /*its okay to make all saved data always hot*/
-//    val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
+    //val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
+
     val allListData: SharedFlow<TaskUiState>
         get() = repository.observeTasks()
             .map { result ->
@@ -46,11 +44,6 @@ class MainViewModel(
         get() = updateStateTask(null) ?: TaskModel(id = 0) // dummy
 
     fun updateStateTask(task: TaskModel?): TaskModel? = task
-
-
-    fun forceRefresh() {
-        repository.refresh()
-    }
 
 
     fun updateCheckedTask(task: TaskModel, check: Boolean) {

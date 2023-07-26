@@ -103,7 +103,7 @@ private fun TodoListScene(
 
         Status.ERROR -> ErrorScreen(
             message = "Refresh please",
-            onTimeout = { mainViewModel.forceRefresh() }
+            onTimeout = {  }
         )
 
         Status.LOADING -> LoadingScreen()

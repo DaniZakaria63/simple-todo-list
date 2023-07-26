@@ -4,7 +4,7 @@ import com.daniza.simple.todolist.data.local.task.TaskDao
 import com.daniza.simple.todolist.data.local.task.asDomainsModel
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.source.Result
-import com.daniza.simple.todolist.data.source.TaskSourceData
+import com.daniza.simple.todolist.data.source.TaskRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,16 +14,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/*Several Todos:
-* - create dummy data, or Fake Test to TodoRepositoryTest (testUnit)
-* - also implement all methods under TaskSourceData
-* - make sure all the test got passed
-* */
 class TodoRepository(
     private val taskDao: TaskDao,
     private val appCoroutine: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : TaskSourceData {
+) : TaskRepository {
 
     override fun observeTasks(): Flow<Result<List<TaskModel>>> {
         return taskDao.findAll().map { value ->
@@ -45,14 +40,6 @@ class TodoRepository(
                 taskDao.saveOne(task.asDatabaseModel())
             }
         }
-    }
-
-    fun refresh(){
-        observeTasks()
-    }
-
-    override fun setActiveStatus(task: TaskModel, status: Boolean) {
-
     }
 
     override fun updateTask(task: TaskModel) {
