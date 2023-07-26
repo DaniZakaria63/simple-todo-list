@@ -32,7 +32,12 @@ class MainViewModel(
             .map { result ->
                 when (result) {
                     is Result.Loading -> TaskUiState(isLoading = true)
-                    is Result.Success -> TaskUiState(taskDatas = result.data)
+                    is Result.Success -> TaskUiState(
+                        taskDatas = result.data.sortedWith(
+                            compareBy({ it.checked }, { it.id })
+                        )
+                    )
+
                     is Result.Error -> TaskUiState(isError = true)
                 }
             }.shareIn(
@@ -52,7 +57,7 @@ class MainViewModel(
         repository.updateTask(task)
     }
 
-    /*TODO: validity later about the parameter*/
+    /*the primary information in todolist is title*/
     fun saveNewTask(task: TaskModel) {
         repository.saveTask(task)
     }

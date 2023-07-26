@@ -4,16 +4,24 @@ package com.daniza.simple.todolist.ui.widget.task
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +34,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.daniza.simple.todolist.data.model.TaskModel
+import com.daniza.simple.todolist.data.model.toDateString
 
 enum class TaskDialogType {
     NEW, EDIT, DELETE
@@ -45,21 +54,16 @@ fun TaskDialog(
         mutableStateOf(TextFieldValue(taskModel.description))
     }
 
-    var duedate by remember {
-        mutableStateOf(TextFieldValue("2023-7-26")) // need to implement date picker ASAP
-    }
-
     when (type) {
         TaskDialogType.DELETE -> DialogDeleteTask(taskModel = taskModel, onButtonClicked = callback)
         else ->
             DialogFormTask(
                 title = title,
                 description = description,
-                duedate = duedate,
+                duedate = taskModel.dueDate,
                 onButtonClicked = callback,
                 onTitleChange = { title = it },
                 onDescChange = { description = it },
-                onDateChange = { duedate = it },
             )
     }
 }
@@ -94,20 +98,24 @@ private fun DialogDeleteTask(
     )
 }
 
+@ExperimentalMaterial3Api
 @Composable
 private fun DialogFormTask(
     title: TextFieldValue,
     description: TextFieldValue,
-    duedate: TextFieldValue,
+    duedate: String,
     onButtonClicked: (TaskModel, Status) -> Unit,
     onTitleChange: (TextFieldValue) -> Unit,
     onDescChange: (TextFieldValue) -> Unit,
-    onDateChange: (TextFieldValue) -> Unit,
 ) {
     Dialog(onDismissRequest = { onButtonClicked(TaskModel(id = 0), Status.ERROR) }) {
         Surface(shape = RoundedCornerShape(12.dp), color = Color.White) {
             Box(contentAlignment = Alignment.Center) {
-                Column(modifier = Modifier.padding(24.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     TextField(value = title, onValueChange = onTitleChange, label = {
                         Text(text = "Title")
                     })
@@ -120,16 +128,40 @@ private fun DialogFormTask(
 
                     Divider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 12.dp))
 
-                    TextField(
-                        value = duedate,
-                        onValueChange = onDateChange,
-                        enabled = false,
-                        label = {
-                            Text(text = "Due Date")
-                        },
-                        placeholder = {
-                            Text(text = "Today")
-                        })
+                    var datePickerValue by remember {
+                        mutableStateOf(duedate)
+                    }
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    val datePickerState =
+                        rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    datePickerState.selectedDateMillis?.let {
+                                        datePickerValue = it.toDateString()
+                                    }
+                                    showDatePicker = false
+                                }) {
+                                    Text(text = "Select")
+                                }
+                            }) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Date: $datePickerValue",
+                            color = Color.Black,
+                            modifier = Modifier.weight(1f)
+                                .align(alignment = Alignment.CenterVertically)
+                        )
+                        TextButton(onClick = { showDatePicker = true }) {
+                            Text(text = "Select Due Date")
+                        }
+
+                    }
 
                     Divider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 12.dp))
 
@@ -138,7 +170,7 @@ private fun DialogFormTask(
                             TaskModel(
                                 title = title.text,
                                 description = description.text,
-                                dueDate = duedate.text
+                                dueDate = datePickerValue
                             ),
                             if (title.text.isEmpty() || title.text.equals("-")) {
                                 Status.ERROR

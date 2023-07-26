@@ -6,6 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.daniza.simple.todolist.R
@@ -62,7 +64,20 @@ fun TaskItem(
                 .weight(1f)
                 .padding(12.dp)
         ) {
-            Text(task.title, style = MaterialTheme.typography.bodyLarge)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    task.title,
+                    style = if (task.checked) TextStyle(textDecoration = TextDecoration.LineThrough)
+                    else MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2
+                )
+                Text(
+                    text = task.dueDate,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Black
+                )
+            }
             if (expanded) {
                 Text(
                     text = task.description,
