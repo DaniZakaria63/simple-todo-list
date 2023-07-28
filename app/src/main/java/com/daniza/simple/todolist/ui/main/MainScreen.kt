@@ -51,7 +51,10 @@ import com.daniza.simple.todolist.ui.widget.task.TaskUiState
 import com.daniza.simple.todolist.ui.widget.task_type.TaskTypeCardList
 
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+fun MainScreen(
+    viewModel: MainViewModel,
+    toSingleTask: ()->Unit,
+) {
     Surface(color = MaterialTheme.colorScheme.primary) {
         var showSplashScreen by remember { mutableStateOf(false) }
         if (showSplashScreen) {
@@ -67,7 +70,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 TaskTypeModel(name = "one", _task_list = dummy_task),
                 TaskTypeModel(name = "two", _task_list = dummy_task)
             )
-            TodoTaskTypeContent(dummy_type)
+            TodoTaskTypeContent(dummy_type, toSingleTask)
 //            TodoListScene(mainViewModel = viewModel, modifier = Modifier.fillMaxSize())
         }
     }
@@ -138,6 +141,7 @@ private fun TodoListScene(
 @Composable
 private fun TodoTaskTypeContent(
     listTaskType: List<TaskTypeModel> = listOf(),
+    onCardClicked: () -> Unit,
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -197,7 +201,8 @@ private fun TodoTaskTypeContent(
                         items = taskType.task_list,
                         modifier = Modifier
                             .padding(start = 16.dp, end = 8.dp)
-                            .width(220.dp)
+                            .width(220.dp),
+                        onCardClicked = onCardClicked
                     )
                 }
             }

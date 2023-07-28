@@ -22,17 +22,24 @@ fun TodoNavHost(
         modifier = modifier
     ) {
         composable(route = MainDestination.route) {
-            MainScreen(viewModel = viewModel)
-//            navController.navigateSingleTopTo(MainDestination.route)
+            MainScreen(viewModel = viewModel) {
+                navController.navigateToSingleTask("dummy")
+            }
         }
 
-        composable(route = SettingDestination.route){
+        composable(route = SettingDestination.route) {
             SettingScreen(viewModel = viewModel)
 //            navController.navigateSingleTopTo(SettingDestination.route)
         }
 
-        composable(route = SingleTaskDestination.route){
-            SingleTaskScreen(viewModel = viewModel)
+        composable(
+            route = SingleTaskDestination.routeWithArgs,
+            arguments = SingleTaskDestination.arguments,
+            deepLinks = SingleTaskDestination.deepLink
+            ) { navBackStackEntry ->
+            val taskType =
+                navBackStackEntry.arguments?.getString(SingleTaskDestination.taskTypeArgs)
+            SingleTaskScreen(viewModel = viewModel, type = taskType)
 //            navController.navigateSingleTopTo()
         }
     }

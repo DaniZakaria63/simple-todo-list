@@ -21,7 +21,8 @@ import com.daniza.simple.todolist.data.model.TaskModel
 @Composable
 fun TaskTypeCardList(
     modifier: Modifier = Modifier,
-    items: List<TaskModel>
+    items: List<TaskModel>,
+    onCardClicked: () -> Unit,
 ) {
     Card(
         elevation = CardDefaults.cardElevation(
@@ -32,7 +33,7 @@ fun TaskTypeCardList(
             containerColor = Color.Red,
             contentColor = Color.White
         ),
-        onClick = { Log.d("TAG", "TaskTypeCardList: CLICKED") }
+        onClick = onCardClicked
     ) {
 
         Column(
@@ -78,6 +79,7 @@ private fun TaskTypeCardItemPreview() {
     val items = List(4) { TaskModel(it, "List ke-$it") }
     TaskTypeCardList(
         modifier = Modifier.padding(12.dp),
-        items = items
+        items = items,
+        {}
     )
 }
