@@ -1,6 +1,5 @@
 package com.daniza.simple.todolist.ui.widget.task_type
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -49,7 +48,7 @@ fun TaskTypeCardList(
             )
         ) {
             Text(
-                text = "Trip To Paris",
+                text = taskType.name,
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 1,
                 modifier = Modifier.padding(end = 16.dp),

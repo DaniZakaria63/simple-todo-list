@@ -38,7 +38,7 @@ fun TodoNavHost(
             deepLinks = SingleTaskDestination.deepLink
             ) { navBackStackEntry ->
             val taskType =
-                navBackStackEntry.arguments?.getString(SingleTaskDestination.taskTypeArgs)
+                navBackStackEntry.arguments?.getInt(SingleTaskDestination.taskTypeArgs)
             SingleTaskScreen(mainViewModel = viewModel, type = taskType)
         }
     }

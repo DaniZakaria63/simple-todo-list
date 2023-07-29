@@ -17,4 +17,9 @@ interface TaskRepository {
 
     fun deleteTask(task: TaskModel)
 
+    fun saveTaskType(type: TaskTypeModel)
+
+    fun observeTypeOne(typeId: String): Flow<Result<List<TaskModel>>>
+
+    fun getTaskTypeOne(typeId: Int) : Flow<Result<TaskTypeModel>>
 }

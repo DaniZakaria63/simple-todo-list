@@ -86,15 +86,21 @@ val taskListDummy: TaskUiState<TaskModel> = TaskUiState(
 @Composable
 fun SingleTaskScreen(
     mainViewModel: MainViewModel,
-    type: String? = ""
+    type: Int? = 0
 ) {
     var showDialog by remember { mutableStateOf("") }
-    var stateTask by remember { mutableStateOf(TaskModel()) }
+    var stateTask by remember { mutableStateOf(TaskModel(type_id = type?:0)) }
 
-    val taskTypeModel: TaskUiState<TaskTypeModel> = TaskUiState(dataSingle = null) // listen to Types data
-    val listTask: TaskUiState<TaskModel> by mainViewModel.allListData.collectAsStateWithLifecycle(
-        initialValue = TaskUiState<TaskModel>(isLoading = true)
-    )
+    /* Listening to the parent which is TaskTypeModel within its value*/
+    val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.getOneTaskType(type?:0)
+        .collectAsStateWithLifecycle(initialValue = TaskUiState(isLoading = true))
+
+    /* Listening into list of TaskModel, focusing on the list // Deprecated
+    val listTask: TaskUiState<TaskModel> by mainViewModel.updateStateTaskType(type.toString())
+        .collectAsStateWithLifecycle(
+            initialValue = TaskUiState<TaskModel>(isLoading = true)
+        )
+     */
 
     /* Show the dialog first, double checking */
     when (showDialog) {
@@ -110,21 +116,22 @@ fun SingleTaskScreen(
             taskModel = stateTask,
             callback = { model, status ->
                 Log.d("ASD", "TodoListScene: $status")
-                if (status == Status.DATA) mainViewModel.editTask(stateTask,model);showDialog = ""
+                if (status == Status.DATA) mainViewModel.editTask(type?:0, stateTask, model);showDialog = ""
             })
 
         "NEW" -> TaskDialog(
             TaskDialogType.NEW,
             taskModel = TaskModel(id = 0),
             callback = { model, status ->
-                if (status == Status.DATA) mainViewModel.saveNewTask(model);showDialog = ""
+                if (status == Status.DATA) mainViewModel.saveNewTask(type?:0,model);showDialog = ""
             })
     }
 
-    when (listTask.status) {
+    when (taskTypeModel.status) {
         Status.DATA -> SingleTaskContent(
-            listTask = listTask.dataList!!,
-            onCheckedTask = { task, b -> },
+            taskType = taskTypeModel.dataSingle!!,
+            listTask = taskTypeModel.dataSingle?.task_list!!,
+            onCheckedTask = { task, b -> mainViewModel.updateCheckedTask(task, b)},
             onDeleteTask = { task -> showDialog = "DELETE";stateTask = task },
             onEditTask = { task -> showDialog = "EDIT";stateTask = task },
             onNewTask = { showDialog = "NEW" }
@@ -132,32 +139,16 @@ fun SingleTaskScreen(
 
         Status.ERROR -> ErrorScreen(
             message = "Refresh please",
-            onTimeout = {  }
+            onTimeout = { }
         )
 
         Status.LOADING -> LoadingScreen()
     }
-/*
-    SingleTaskContent(
-        listTask = listTask.dataList,
-        onCheckedTask = { model, b ->
-
-        },
-        onDeleteTask = { model ->
-
-        },
-        onEditTask = { model ->
-
-        },
-        onNewTask = {
-
-        }
-    )
- */
 }
 
 @Composable
 private fun SingleTaskContent(
+    taskType: TaskTypeModel,
     listTask: List<TaskModel>?,
     onCheckedTask: (TaskModel, Boolean) -> Unit,
     onDeleteTask: (TaskModel) -> Unit,
@@ -185,12 +176,12 @@ private fun SingleTaskContent(
                         .weight(1f)
                 ) {
                     Text(
-                        text = "My Task",
+                        text = taskType.name,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "3 of 4 Task",
+                        text = "${taskType.task_list_size_inactive} of ${taskType.task_list_size} Task Done",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray,
                         modifier = Modifier.padding(top = 8.dp)
@@ -212,10 +203,46 @@ private fun SingleTaskContent(
                 }
             }
 
+
+            Row(
+                modifier = Modifier.padding(vertical = 12.dp)
+            ) {
+                TextButton(
+                    onClick = {},
+                    modifier = Modifier.padding(start = 24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ColorLens,
+                        contentDescription = "pick_color"
+                    )
+                    Text(
+                        text = "Pick Color",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = onNewTask,
+                    shape = RectangleShape,
+                    modifier = Modifier
+                        .padding(end = 24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "",
+                        modifier = Modifier.padding(0.dp)
+                    )
+                    Text(text = "Add Task")
+                }
+            }
+
+
             if (listTask.isNullOrEmpty()) {
                 Text(
                     text = "What you will be do?",
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 40.dp),
                     textAlign = TextAlign.Center
                 )
             } else {
@@ -223,39 +250,6 @@ private fun SingleTaskContent(
                     modifier = Modifier.padding(top = 12.dp),
                     userScrollEnabled = true,
                 ) {
-                    item {
-                        Row(
-                            modifier = Modifier.padding(vertical = 12.dp)
-                        ) {
-                            TextButton(
-                                onClick = {},
-                                modifier = Modifier.padding(start = 24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.ColorLens,
-                                    contentDescription = "pick_color"
-                                )
-                                Text(
-                                    text = "Pick Color",
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-                            Button(
-                                onClick = onNewTask,
-                                shape = RectangleShape,
-                                modifier = Modifier
-                                    .padding(end = 24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = "",
-                                    modifier = Modifier.padding(0.dp)
-                                )
-                                Text(text = "Add Task")
-                            }
-                        }
-                    }
                     items(items = listTask) { item ->
                         TaskItem(
                             task = item,

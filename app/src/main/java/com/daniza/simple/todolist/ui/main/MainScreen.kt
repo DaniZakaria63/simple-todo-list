@@ -44,6 +44,9 @@ import com.daniza.simple.todolist.data.source.TaskUiState
 import com.daniza.simple.todolist.ui.splash.SplashScreen
 import com.daniza.simple.todolist.ui.widget.common.ErrorScreen
 import com.daniza.simple.todolist.ui.widget.common.LoadingScreen
+import com.daniza.simple.todolist.ui.widget.task.TaskDialog
+import com.daniza.simple.todolist.ui.widget.task.TaskDialogType
+import com.daniza.simple.todolist.ui.widget.task.TaskTypeDialog
 import com.daniza.simple.todolist.ui.widget.task_type.TaskTypeCardList
 
 @Composable
@@ -84,11 +87,17 @@ private fun TodoListScene(
     mainViewModel: MainViewModel = viewModel()
 ) {
 
-    var showDialog by remember { mutableStateOf("") }
-    var stateTask by remember { mutableStateOf(TaskModel()) }
+    var showNewDialog by remember { mutableStateOf(false) }
     val listTaskType: TaskUiState<TaskTypeModel> by mainViewModel.allTasksTypeData.collectAsStateWithLifecycle(
         initialValue = TaskUiState<TaskTypeModel>(isLoading = true)
     )
+
+    if(showNewDialog){
+        TaskTypeDialog(callback = {task, status ->
+            showNewDialog = false
+            if(status == Status.DATA) mainViewModel.saveNewTaskType(task!!)
+        })
+    }
 
     when (listTaskType.status) {
         Status.DATA -> TodoTaskTypeContent(
@@ -97,6 +106,7 @@ private fun TodoListScene(
             onCheckChanged = { task, b ->
                 mainViewModel.updateCheckedTask(task, b)
             },
+            onButtonAddClicked = {showNewDialog = true}
         )
 
         Status.ERROR -> ErrorScreen(
@@ -114,6 +124,7 @@ private fun TodoTaskTypeContent(
     listTaskType: List<TaskTypeModel> = listOf(),
     onCardClicked: (Int) -> Unit,
     onCheckChanged: (TaskModel, Boolean) -> Unit,
+    onButtonAddClicked: () -> Unit,
 ) {
     Log.i("ASD", "TodoTaskTypeContent: $listTaskType")
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -148,7 +159,7 @@ private fun TodoTaskTypeContent(
 
             Spacer(modifier = Modifier.padding(24.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onButtonAddClicked,
                 shape = RoundedCornerShape(4.dp),
                 border = BorderStroke(1.dp, Color.Gray),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),

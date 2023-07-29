@@ -32,6 +32,31 @@ class MainViewModel(
                 }
             }
 
+    fun getOneTaskType(taskId: Int): SharedFlow<TaskUiState<TaskTypeModel>> {
+        return repository.getTaskTypeOne(taskId).map { result ->
+            when (result) {
+                is Result.Success -> TaskUiState(dataSingle = result.data)
+                is Result.Error -> TaskUiState(isError = true)
+                Result.Loading -> TaskUiState(isLoading = true)
+            }
+        }.shareIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed())
+    }
+
+    fun updateStateTaskType(taskId: String): Flow<TaskUiState<TaskModel>> {
+        return repository.observeTypeOne(taskId).map { result ->
+            when (result) {
+                is Result.Success -> TaskUiState<TaskModel>(dataList = result.data)
+                is Result.Error -> TaskUiState(isError = true)
+                Result.Loading -> TaskUiState(isLoading = true)
+            }
+        }
+    }
+
+
+    fun saveNewTaskType(type: TaskTypeModel) {
+        repository.saveTaskType(type)
+    }
+
     /*its okay to make all saved data always hot*/
     //val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
 
@@ -53,12 +78,6 @@ class MainViewModel(
                 started = SharingStarted.WhileSubscribed()
             )
 
-    val singleTask: TaskModel
-        get() = updateStateTask(null) ?: TaskModel(id = 0) // dummy
-
-    fun updateStateTask(task: TaskModel?): TaskModel? = task
-
-
     fun updateCheckedTask(task: TaskModel, check: Boolean) {
         task.isFinished = check
         task.checked = check
@@ -66,13 +85,15 @@ class MainViewModel(
     }
 
     /*the primary information in todolist is title*/
-    fun saveNewTask(task: TaskModel) {
+    fun saveNewTask(typeId: Int, task: TaskModel) {
+        task.type_id = typeId
         repository.saveTask(task)
     }
 
-    fun editTask(task: TaskModel, newTask: TaskModel) {
+    fun editTask(typeId: Int, task: TaskModel, newTask: TaskModel) {
         newTask.apply {
             id = task.id
+            type_id = typeId
             dateCreated = task.dateCreated
             isFinished = task.isFinished
         }

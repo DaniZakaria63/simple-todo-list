@@ -5,11 +5,14 @@ package com.daniza.simple.todolist.ui.widget.task
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -17,6 +20,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,12 +38,48 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.daniza.simple.todolist.data.model.TaskModel
+import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.model.toDateString
 import com.daniza.simple.todolist.data.source.Status
 
 enum class TaskDialogType {
-    NEW, EDIT, DELETE
+    NEW, EDIT, DELETE, TASK_TYPE
 }
+
+@Composable
+fun TaskTypeDialog(
+    callback: (TaskTypeModel?, Status) -> Unit
+) {
+    var title by remember {
+        mutableStateOf(TextFieldValue(""))
+    }
+    Dialog(onDismissRequest = { callback(null, Status.ERROR) }) {
+        Surface(shape = RoundedCornerShape(4.dp), color = Color.White) {
+            Column(
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "New Category of Task",
+                    modifier = Modifier.padding(top = 24.dp, bottom = 20.dp),
+                    color = Color.Black
+                )
+                TextField(value = title, onValueChange = { title = it }, label = {
+                    Text(text = "Title")
+                })
+                Button(onClick = {
+                    callback(TaskTypeModel(name = title.text), Status.DATA)
+                }, modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+                    Text(text = "Add Category")
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun TaskDialog(
@@ -121,13 +161,13 @@ private fun DialogFormTask(
                         Text(text = "Title")
                     })
 
-                    Divider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 12.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
                     TextField(value = description, onValueChange = onDescChange, label = {
                         Text(text = "Description")
                     })
 
-                    Divider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 12.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
                     var datePickerValue by remember {
                         mutableStateOf(duedate)
@@ -155,7 +195,8 @@ private fun DialogFormTask(
                         Text(
                             text = "Date: $datePickerValue",
                             color = Color.Black,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
                                 .align(alignment = Alignment.CenterVertically)
                         )
                         TextButton(onClick = { showDatePicker = true }) {
@@ -164,7 +205,7 @@ private fun DialogFormTask(
 
                     }
 
-                    Divider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 12.dp))
+                    Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
                     Button(onClick = {
                         onButtonClicked(
