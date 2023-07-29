@@ -3,11 +3,16 @@ package com.daniza.simple.todolist.ui.widget.task
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -50,10 +55,10 @@ fun TaskItem(
     }
     Row(
         modifier = Modifier
-            .padding(12.dp)
+            .padding(vertical = 12.dp)
             .animateContentSize(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    dampingRatio = Spring.DampingRatioLowBouncy,
                     stiffness = Spring.StiffnessLow
                 )
             )
@@ -62,42 +67,49 @@ fun TaskItem(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(12.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    task.title,
-                    style = if (task.checked) TextStyle(textDecoration = TextDecoration.LineThrough)
-                    else MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 2
-                )
-                Text(
-                    text = task.dueDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black
-                )
-            }
+            Text(
+                task.title,
+                style = if (task.checked) TextStyle(textDecoration = TextDecoration.LineThrough)
+                else MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 4.dp),
+                maxLines = 2
+            )
+            Text(
+                text = task.dueDate,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
             if (expanded) {
                 Text(
                     text = task.description,
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.padding(top = 20.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 12.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
 
                     Button(
                         onClick = onDeleteClicked,
                         modifier = Modifier
-                            .padding(end = 4.dp),
-                        colors = ButtonDefaults.buttonColors(Color.Red)
+                            .padding(end = 4.dp)
+                            .height(32.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                        shape = RoundedCornerShape(4.dp),
+                        border = BorderStroke(1.dp, Color.Red),
                     ) {
                         Text(text = "Delete")
                     }
                     Button(
                         onClick = onEditClicked, modifier = Modifier
-                            .padding(start = 4.dp),
-                        colors = ButtonDefaults.buttonColors(Color.Blue)
+                            .padding(start = 4.dp)
+                            .height(32.dp),
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.White),
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(text = "Edit")
                     }

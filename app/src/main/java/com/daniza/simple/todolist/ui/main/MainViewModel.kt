@@ -7,14 +7,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.daniza.simple.todolist.TodoApplication
-import com.daniza.simple.todolist.data.TodoRepository
 import com.daniza.simple.todolist.data.model.TaskModel
+import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.data.source.TaskRepository
-import com.daniza.simple.todolist.ui.widget.task.TaskUiState
-import com.daniza.simple.todolist.ui.widget.task.UiState
+import com.daniza.simple.todolist.data.source.TaskUiState
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -23,17 +21,27 @@ import kotlinx.coroutines.flow.shareIn
 class MainViewModel(
     private val repository: TaskRepository
 ) : ViewModel() {
+    val allTasksTypeData: Flow<TaskUiState<TaskTypeModel>>
+        get() = repository.observeTypes()
+            .map { result ->
+                when (result) {
+                    is Result.Error -> TaskUiState(isError = true)
+                    is Result.Success -> TaskUiState(result.data)
+
+                    Result.Loading -> TaskUiState(isLoading = true)
+                }
+            }
 
     /*its okay to make all saved data always hot*/
     //val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
 
-    val allListData: SharedFlow<TaskUiState>
+    val allListData: SharedFlow<TaskUiState<TaskModel>>
         get() = repository.observeTasks()
             .map { result ->
                 when (result) {
-                    is Result.Loading -> TaskUiState(isLoading = true)
+                    is Result.Loading -> TaskUiState<TaskModel>(isLoading = true)
                     is Result.Success -> TaskUiState(
-                        taskDatas = result.data.sortedWith(
+                        dataList = result.data.sortedWith(
                             compareBy({ it.checked }, { it.id })
                         )
                     )

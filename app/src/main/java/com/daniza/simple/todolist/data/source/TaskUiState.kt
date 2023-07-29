@@ -1,4 +1,4 @@
-package com.daniza.simple.todolist.ui.widget.task
+package com.daniza.simple.todolist.data.source
 
 import com.daniza.simple.todolist.data.model.TaskModel
 
@@ -6,8 +6,9 @@ enum class Status {
     LOADING, ERROR, DATA
 }
 
-data class TaskUiState(
-    val taskDatas: List<TaskModel>? = null,
+data class TaskUiState<T>(
+    val dataList: List<T>? = null,
+    val dataSingle: T? = null,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
 ) {

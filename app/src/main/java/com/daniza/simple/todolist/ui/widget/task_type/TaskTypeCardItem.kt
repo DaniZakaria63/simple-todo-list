@@ -21,16 +21,19 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.daniza.simple.todolist.data.model.TaskModel
 
-
+/*Card item for showing latest active task in the beginning of category/type task
+* each items have checked event trigger
+* limitations:
+* - should not have any attribute edit except checked
+* - do not have any deleted event
+* - shows tasks in max. 4 rows
+* */
 @Composable
 fun TaskTypeCardItem(
+    modifier: Modifier = Modifier,
     item: TaskModel,
-    modifier: Modifier = Modifier
+    onCheckChange: (Boolean) -> Unit,
 ) {
-    var checked by remember {
-        mutableStateOf(item.checked)
-    }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -38,8 +41,8 @@ fun TaskTypeCardItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = checked,
-            onCheckedChange = { checked = it },
+            checked = item.checked,
+            onCheckedChange = onCheckChange,
             colors = CheckboxDefaults.colors(
                 checkmarkColor = Color.White,
                 uncheckedColor = Color.White,
@@ -48,7 +51,7 @@ fun TaskTypeCardItem(
         )
         Text(
             text = item.title, maxLines = 1, textAlign = TextAlign.Center,
-            style = if (checked) TextStyle(textDecoration = TextDecoration.LineThrough)
+            style = if (item.checked) TextStyle(textDecoration = TextDecoration.LineThrough)
             else MaterialTheme.typography.bodyLarge,
         )
     }

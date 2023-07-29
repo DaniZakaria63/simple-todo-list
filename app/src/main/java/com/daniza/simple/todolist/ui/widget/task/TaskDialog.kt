@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.toDateString
+import com.daniza.simple.todolist.data.source.Status
 
 enum class TaskDialogType {
     NEW, EDIT, DELETE

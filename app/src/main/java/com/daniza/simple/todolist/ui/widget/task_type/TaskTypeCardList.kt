@@ -14,15 +14,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.daniza.simple.todolist.data.model.TaskModel
+import com.daniza.simple.todolist.data.model.TaskTypeModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskTypeCardList(
     modifier: Modifier = Modifier,
+    taskType: TaskTypeModel,
     items: List<TaskModel>,
-    onCardClicked: () -> Unit,
+    onCardClicked: (Int) -> Unit,
+    onCheckChange: (TaskModel, Boolean) -> Unit,
 ) {
     Card(
         elevation = CardDefaults.cardElevation(
@@ -33,7 +38,7 @@ fun TaskTypeCardList(
             containerColor = Color.Red,
             contentColor = Color.White
         ),
-        onClick = onCardClicked
+        onClick = { onCardClicked(taskType.id) }
     ) {
 
         Column(
@@ -55,31 +60,35 @@ fun TaskTypeCardList(
                 color = Color.White
             )
 
-            LazyColumn {
-                items(items = items) { item ->
-                    TaskTypeCardItem(item = item)
+            if(items.isEmpty()){
+                Text(
+                    text = "You haven't add any list yet",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }else {
+                LazyColumn {
+                    items(items = items) { item ->
+                        TaskTypeCardItem(
+                            item = item,
+                            onCheckChange = { checked -> onCheckChange(item, checked) }
+                        )
+                    }
                 }
             }
-
-//            Button(
-//                onClick = { /*TODO*/ },
-//                colors = ButtonDefaults.buttonColors(contentColor = Color.White)
-//            ) {
-//                Icon(imageVector = Icons.Filled.ArrowRight, contentDescription = "more")
-//                Text(text = "More")
-//            }
         }
-
     }
 }
 
-//@Preview(showBackground = true, heightDp = 320, widthDp = 320)
+@Preview(showBackground = true, heightDp = 320, widthDp = 320)
 @Composable
 private fun TaskTypeCardItemPreview() {
-    val items = List(4) { TaskModel(it, "List ke-$it") }
+    val items = List(4) { TaskModel(it, title = "List ke-$it") }
     TaskTypeCardList(
         modifier = Modifier.padding(12.dp),
+        taskType = TaskTypeModel(),
         items = items,
-        {}
+        {},
+        {m,b->}
     )
 }

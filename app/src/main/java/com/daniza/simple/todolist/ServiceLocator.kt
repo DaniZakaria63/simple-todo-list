@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.daniza.simple.todolist.data.TodoRepository
 import com.daniza.simple.todolist.data.local.TodoDatabase
 import com.daniza.simple.todolist.data.local.task.TaskDao
+import com.daniza.simple.todolist.data.local.type.TypeDao
 
 object ServiceLocator {
     @Volatile
@@ -21,11 +22,17 @@ object ServiceLocator {
     private fun createTodoRepository(context: Context) : TodoRepository{
         val newRepo =TodoRepository(
             createTaskDao(context),
+            createTypeTaskDao(context),
             (context.applicationContext as TodoApplication).appCoroutine
         )
 
         repository = newRepo
         return newRepo
+    }
+
+    private fun createTypeTaskDao(context: Context): TypeDao {
+        val database = database ?: createTodoDatabase(context)
+        return database.typeDao()
     }
 
     private fun createTaskDao(context: Context): TaskDao{

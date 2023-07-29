@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat
 
 data class TaskModel(
     var id: Int = 0,
+    var type_id: Int = 0,
     var title: String = "-",
     var description: String = "-",
     var dueDate: String = "-",
@@ -19,7 +20,7 @@ data class TaskModel(
     var checked: Boolean by mutableStateOf(isFinished)
 
     fun asDatabaseModel(): TaskEntity {
-        return TaskEntity(id, title, description, dueDate, isFinished, dateCreated)
+        return TaskEntity(id, type_id, title, description, dueDate, isFinished, dateCreated)
     }
 }
 

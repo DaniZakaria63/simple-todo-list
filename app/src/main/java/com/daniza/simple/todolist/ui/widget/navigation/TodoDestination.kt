@@ -31,7 +31,7 @@ object SingleTaskDestination: TodoDestination{
     const val taskTypeArgs = "task_type"
     val routeWithArgs = "$route/{$taskTypeArgs}"
     val arguments = listOf(
-        navArgument(taskTypeArgs) { type = NavType.StringType }
+        navArgument(taskTypeArgs) { type = NavType.IntType }
     )
     val deepLink = listOf<NavDeepLink>(
         navDeepLink { uriPattern = "todolist://$route/{$taskTypeArgs}" }

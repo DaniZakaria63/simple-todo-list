@@ -1,25 +1,37 @@
 package com.daniza.simple.todolist.ui.single_task
 
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,36 +39,107 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.daniza.simple.todolist.data.model.TaskModel
+import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.ui.main.MainViewModel
+import com.daniza.simple.todolist.ui.widget.common.ErrorScreen
+import com.daniza.simple.todolist.ui.widget.common.LoadingScreen
+import com.daniza.simple.todolist.data.source.Status
+import com.daniza.simple.todolist.ui.widget.task.TaskDialog
+import com.daniza.simple.todolist.ui.widget.task.TaskDialogType
 import com.daniza.simple.todolist.ui.widget.task.TaskItem
-import com.daniza.simple.todolist.ui.widget.task.TaskUiState
+import com.daniza.simple.todolist.ui.widget.task.TaskList
+import com.daniza.simple.todolist.data.source.TaskUiState
+
+
+val taskListDummy: TaskUiState<TaskModel> = TaskUiState(
+    dataList = listOf(
+        TaskModel(
+            title = "first list",
+            description = "first description",
+            dueDate = "2021-2-2"
+        ),
+        TaskModel(
+            title = "the second list",
+            description = "the second description",
+            dueDate = "2021-2-2"
+        ),
+        TaskModel(
+            title = "the third list",
+            description = "the third description",
+            dueDate = "2021-2-2"
+        ),
+        TaskModel(
+            title = "first list",
+            description = "first description",
+            dueDate = "2021-2-2"
+        ),
+        TaskModel(
+            title = "first list",
+            description = "first description",
+            dueDate = "2021-2-2"
+        ),
+    )
+) // listen to Tasks data
 
 @Composable
 fun SingleTaskScreen(
-    viewModel: MainViewModel,
+    mainViewModel: MainViewModel,
     type: String? = ""
 ) {
-    val taskTypeModel: TaskUiState = TaskUiState(taskDatas = null) // listen to Types data
-    val taskList: TaskUiState = TaskUiState(
-        taskDatas = listOf(
-            TaskModel(title = "first list", description = "first description"),
-            TaskModel(title = "the second list", description = "the second description"),
-            TaskModel(title = "the third list", description = "the third description"),
-            TaskModel(title = "first list", description = "first description"),
-            TaskModel(title = "the second list", description = "the second description"),
-            TaskModel(title = "the third list", description = "the third description"),
-            TaskModel(title = "first list", description = "first description"),
-            TaskModel(title = "the second list", description = "the second description"),
-            TaskModel(title = "the third list", description = "the third description"),
-            TaskModel(title = "first list", description = "first description"),
-            TaskModel(title = "the second list", description = "the second description"),
-            TaskModel(title = "the third list", description = "the third description"),
-        )
-    ) // listen to Tasks data
+    var showDialog by remember { mutableStateOf("") }
+    var stateTask by remember { mutableStateOf(TaskModel()) }
 
+    val taskTypeModel: TaskUiState<TaskTypeModel> = TaskUiState(dataSingle = null) // listen to Types data
+    val listTask: TaskUiState<TaskModel> by mainViewModel.allListData.collectAsStateWithLifecycle(
+        initialValue = TaskUiState<TaskModel>(isLoading = true)
+    )
+
+    /* Show the dialog first, double checking */
+    when (showDialog) {
+        "DELETE" -> TaskDialog(
+            TaskDialogType.DELETE,
+            taskModel = stateTask,
+            callback = { model, status ->
+                if (status == Status.DATA) mainViewModel.deleteTask(model);showDialog = ""
+            })
+
+        "EDIT" -> TaskDialog(
+            TaskDialogType.EDIT,
+            taskModel = stateTask,
+            callback = { model, status ->
+                Log.d("ASD", "TodoListScene: $status")
+                if (status == Status.DATA) mainViewModel.editTask(stateTask,model);showDialog = ""
+            })
+
+        "NEW" -> TaskDialog(
+            TaskDialogType.NEW,
+            taskModel = TaskModel(id = 0),
+            callback = { model, status ->
+                if (status == Status.DATA) mainViewModel.saveNewTask(model);showDialog = ""
+            })
+    }
+
+    when (listTask.status) {
+        Status.DATA -> SingleTaskContent(
+            listTask = listTask.dataList!!,
+            onCheckedTask = { task, b -> },
+            onDeleteTask = { task -> showDialog = "DELETE";stateTask = task },
+            onEditTask = { task -> showDialog = "EDIT";stateTask = task },
+            onNewTask = { showDialog = "NEW" }
+        )
+
+        Status.ERROR -> ErrorScreen(
+            message = "Refresh please",
+            onTimeout = {  }
+        )
+
+        Status.LOADING -> LoadingScreen()
+    }
+/*
     SingleTaskContent(
-        listTask = taskList.taskDatas,
+        listTask = listTask.dataList,
         onCheckedTask = { model, b ->
 
         },
@@ -70,6 +153,7 @@ fun SingleTaskScreen(
 
         }
     )
+ */
 }
 
 @Composable
@@ -78,7 +162,7 @@ private fun SingleTaskContent(
     onCheckedTask: (TaskModel, Boolean) -> Unit,
     onDeleteTask: (TaskModel) -> Unit,
     onEditTask: (TaskModel) -> Unit,
-    onNewTask: (() -> Unit),
+    onNewTask: () -> Unit,
 ) {
     Surface {
         Column(
@@ -112,6 +196,19 @@ private fun SingleTaskContent(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     Divider(color = Color.LightGray, modifier = Modifier.padding(top = 32.dp))
+                }
+                Button(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, Color.Red),
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "close",
+                        tint = Color.Red
+                    )
                 }
             }
 
@@ -166,6 +263,71 @@ private fun SingleTaskContent(
                             onDeleteClicked = { onDeleteTask(item) },
                             onEditClicked = { onEditTask(item) }
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* OLD VERSION CODE (deprecated)
+*  Change to SingleTaskContent instead
+* */
+
+@Composable
+private fun TodoListContent(
+    listTask: List<TaskModel>,
+    onCheckedTask: (TaskModel, Boolean) -> Unit,
+    onDeleteTask: (TaskModel) -> Unit,
+    onEditTask: (TaskModel) -> Unit,
+    onNewTask: (() -> Unit),
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(
+                    vertical = 20.dp,
+                    horizontal = 24.dp
+                )
+        ) {
+            Text(
+                text = "Simple Todo List",
+                modifier = Modifier
+                    .padding(vertical = 24.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.titleMedium.copy(color = Color.Black)
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+
+                TaskList(
+                    listTask = listTask,
+                    onCheckedTask = onCheckedTask,
+                    onDeleteTask = onDeleteTask,
+                    onEditTask = onEditTask
+                )
+
+                // Show the FAB
+                val showFab by remember {
+                    mutableStateOf(true)
+                }
+
+                if (showFab) {
+                    FloatingActionButton(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        onClick = onNewTask,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .navigationBarsPadding()
+                            .padding(bottom = 8.dp)
+                    ) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "")
                     }
                 }
             }

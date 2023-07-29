@@ -22,8 +22,8 @@ fun TodoNavHost(
         modifier = modifier
     ) {
         composable(route = MainDestination.route) {
-            MainScreen(viewModel = viewModel) {
-                navController.navigateToSingleTask("dummy")
+            MainScreen(viewModel = viewModel) { typeTaskId ->
+                navController.navigateToSingleTask(typeTaskId)
             }
         }
 
@@ -39,8 +39,7 @@ fun TodoNavHost(
             ) { navBackStackEntry ->
             val taskType =
                 navBackStackEntry.arguments?.getString(SingleTaskDestination.taskTypeArgs)
-            SingleTaskScreen(viewModel = viewModel, type = taskType)
-//            navController.navigateSingleTopTo()
+            SingleTaskScreen(mainViewModel = viewModel, type = taskType)
         }
     }
 }
@@ -48,5 +47,5 @@ fun TodoNavHost(
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
 
-private fun NavHostController.navigateToSingleTask(taskType: String) =
+private fun NavHostController.navigateToSingleTask(taskType: Int) =
     this.navigateSingleTopTo("${SingleTaskDestination.route}/$taskType")
