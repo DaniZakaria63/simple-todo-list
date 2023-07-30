@@ -13,6 +13,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks")
     fun findAll(): Flow<List<TaskEntity>>
 
+    @Query("SELECT * FROM tasks WHERE task_type_id = :taskId")
+    fun findAllWithType(taskId: String) : Flow<List<TaskEntity>>
+
     @Query("SELECT * FROM tasks WHERE id = :id")
     fun findOne(id: Int) : Flow<TaskEntity>
 

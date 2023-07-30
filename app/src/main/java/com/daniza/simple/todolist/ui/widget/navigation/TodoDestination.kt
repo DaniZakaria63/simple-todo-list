@@ -1,8 +1,8 @@
 package com.daniza.simple.todolist.ui.widget.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Task
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDeepLink
@@ -20,9 +20,9 @@ object MainDestination: TodoDestination{
     override val route: String  = "home"
 }
 
-object SettingDestination: TodoDestination{
-    override val icon: ImageVector = Icons.Filled.Settings
-    override val route: String = "setting"
+object AnalysisDestination: TodoDestination{
+    override val icon: ImageVector = Icons.Filled.BarChart
+    override val route: String = "analysis"
 }
 
 object SingleTaskDestination: TodoDestination{
@@ -31,7 +31,7 @@ object SingleTaskDestination: TodoDestination{
     const val taskTypeArgs = "task_type"
     val routeWithArgs = "$route/{$taskTypeArgs}"
     val arguments = listOf(
-        navArgument(taskTypeArgs) { type = NavType.StringType }
+        navArgument(taskTypeArgs) { type = NavType.IntType }
     )
     val deepLink = listOf<NavDeepLink>(
         navDeepLink { uriPattern = "todolist://$route/{$taskTypeArgs}" }
@@ -39,4 +39,4 @@ object SingleTaskDestination: TodoDestination{
 }
 
 // Screen to be displayed in top todolist navigation
-val todoTabRowScreen = listOf(MainDestination, SettingDestination)
+val todoTabRowScreen = listOf(MainDestination, AnalysisDestination)

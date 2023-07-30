@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.daniza.simple.todolist.ui.main.MainScreen
 import com.daniza.simple.todolist.ui.main.MainViewModel
-import com.daniza.simple.todolist.ui.setting.SettingScreen
+import com.daniza.simple.todolist.ui.setting.AnalyticScreen
 import com.daniza.simple.todolist.ui.single_task.SingleTaskScreen
 
 @Composable
@@ -22,18 +22,26 @@ fun TodoNavHost(
         modifier = modifier
     ) {
         composable(route = MainDestination.route) {
-            MainScreen(viewModel = viewModel)
-//            navController.navigateSingleTopTo(MainDestination.route)
+            MainScreen(viewModel = viewModel) { typeTaskId ->
+                navController.navigateToSingleTask(typeTaskId)
+            }
         }
 
-        composable(route = SettingDestination.route){
-            SettingScreen(viewModel = viewModel)
+        composable(route = AnalysisDestination.route) {
+            AnalyticScreen(viewModel = viewModel)
 //            navController.navigateSingleTopTo(SettingDestination.route)
         }
 
-        composable(route = SingleTaskDestination.route){
-            SingleTaskScreen(viewModel = viewModel)
-//            navController.navigateSingleTopTo()
+        composable(
+            route = SingleTaskDestination.routeWithArgs,
+            arguments = SingleTaskDestination.arguments,
+            deepLinks = SingleTaskDestination.deepLink
+            ) { navBackStackEntry ->
+            val taskType =
+                navBackStackEntry.arguments?.getInt(SingleTaskDestination.taskTypeArgs)
+            SingleTaskScreen(mainViewModel = viewModel, type = taskType){
+                navController.popBackStack()
+            }
         }
     }
 }
@@ -41,5 +49,5 @@ fun TodoNavHost(
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
 
-private fun NavHostController.navigateToSingleTask(taskType: String) =
+private fun NavHostController.navigateToSingleTask(taskType: Int) =
     this.navigateSingleTopTo("${SingleTaskDestination.route}/$taskType")

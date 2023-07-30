@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,7 +36,7 @@ fun TodoTabRowItem(
     onSelected: () -> Unit,
     selected: Boolean
 ) {
-    val color = MaterialTheme.colorScheme.onSurface
+    val color = MaterialTheme.colorScheme.tertiary
     val durationMillis = if (selected) TabFadeInAnimationDuration else TabFadeOutAnimationDuration
     val animSpec = remember {
         tween<Color>(
@@ -69,7 +70,12 @@ fun TodoTabRowItem(
             )
             .clearAndSetSemantics { contentDescription = text }
     ) {
-        Icon(imageVector = icon, contentDescription = text, tint = tabTintColor)
+        Icon(
+            imageVector = icon,
+            contentDescription = text,
+            tint = tabTintColor,
+            modifier = Modifier.width(24.dp)
+        )
         if (selected) {
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = text.uppercase(Locale.getDefault()), color = tabTintColor)
