@@ -2,6 +2,7 @@ package com.daniza.simple.todolist.ui.single_task
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -86,13 +87,14 @@ val taskListDummy: TaskUiState<TaskModel> = TaskUiState(
 @Composable
 fun SingleTaskScreen(
     mainViewModel: MainViewModel,
-    type: Int? = 0
+    type: Int? = 0,
+    onPopBack: () -> Unit,
 ) {
     var showDialog by remember { mutableStateOf("") }
-    var stateTask by remember { mutableStateOf(TaskModel(type_id = type?:0)) }
+    var stateTask by remember { mutableStateOf(TaskModel(type_id = type ?: 0)) }
 
     /* Listening to the parent which is TaskTypeModel within its value*/
-    val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.getOneTaskType(type?:0)
+    val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.getOneTaskType(type ?: 0)
         .collectAsStateWithLifecycle(initialValue = TaskUiState(isLoading = true))
 
     /* Listening into list of TaskModel, focusing on the list // Deprecated
@@ -104,6 +106,17 @@ fun SingleTaskScreen(
 
     /* Show the dialog first, double checking */
     when (showDialog) {
+        "DELETE_TASK" -> TaskDialog(
+            type = TaskDialogType.DELETE,
+            taskModel = stateTask.apply { title = "All of the data will be lost." },
+            callback = { model, status ->
+                if(status == Status.DATA) {
+                    mainViewModel.deleteTaskType(taskTypeModel.dataSingle!!)
+                    showDialog = ""
+                    onPopBack()
+                }
+            }
+        )
         "DELETE" -> TaskDialog(
             TaskDialogType.DELETE,
             taskModel = stateTask,
@@ -116,14 +129,19 @@ fun SingleTaskScreen(
             taskModel = stateTask,
             callback = { model, status ->
                 Log.d("ASD", "TodoListScene: $status")
-                if (status == Status.DATA) mainViewModel.editTask(type?:0, stateTask, model);showDialog = ""
+                if (status == Status.DATA) mainViewModel.editTask(
+                    type ?: 0,
+                    stateTask,
+                    model
+                );showDialog = ""
             })
 
         "NEW" -> TaskDialog(
             TaskDialogType.NEW,
             taskModel = TaskModel(id = 0),
             callback = { model, status ->
-                if (status == Status.DATA) mainViewModel.saveNewTask(type?:0,model);showDialog = ""
+                if (status == Status.DATA) mainViewModel.saveNewTask(type ?: 0, model);showDialog =
+                ""
             })
     }
 
@@ -131,10 +149,11 @@ fun SingleTaskScreen(
         Status.DATA -> SingleTaskContent(
             taskType = taskTypeModel.dataSingle!!,
             listTask = taskTypeModel.dataSingle?.task_list!!,
-            onCheckedTask = { task, b -> mainViewModel.updateCheckedTask(task, b)},
+            onCheckedTask = { task, b -> mainViewModel.updateCheckedTask(task, b) },
             onDeleteTask = { task -> showDialog = "DELETE";stateTask = task },
             onEditTask = { task -> showDialog = "EDIT";stateTask = task },
-            onNewTask = { showDialog = "NEW" }
+            onNewTask = { showDialog = "NEW" },
+            onDeleteType = {showDialog="DELETE_TASK";}
         )
 
         Status.ERROR -> ErrorScreen(
@@ -154,110 +173,111 @@ private fun SingleTaskContent(
     onDeleteTask: (TaskModel) -> Unit,
     onEditTask: (TaskModel) -> Unit,
     onNewTask: () -> Unit,
+    onDeleteType: () -> Unit,
 ) {
-    Surface {
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .padding(start = 20.dp, top = 40.dp)
         ) {
-            Row(
+            CircularProgressIndicator(
+                0.75f,
+                modifier = Modifier.padding(top = 8.dp),
+                strokeWidth = 1.dp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Column(
+                modifier = Modifier
+                    .padding(start = 24.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = taskType.name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${taskType.task_list_size_inactive} of ${taskType.task_list_size} Task Done",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                Divider(color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.padding(top = 32.dp))
+            }
+            Button(
+                onClick = onDeleteType,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.Red),
+                modifier = Modifier.padding(end = 20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "close",
+                    tint = Color.Red
+                )
+                Text(text = "Delete", color = Color.Red)
+            }
+        }
+
+
+        Row(
+            modifier = Modifier.padding(vertical = 12.dp)
+        ) {
+            TextButton(
+                onClick = {},
+                modifier = Modifier.padding(start = 24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ColorLens,
+                    contentDescription = "pick_color"
+                )
+                Text(
+                    text = "Pick Color",
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onNewTask,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .padding(end = 24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "",
+                    modifier = Modifier.padding(0.dp)
+                )
+                Text(text = "Add Task")
+            }
+        }
+
+
+        if (listTask.isNullOrEmpty()) {
+            Text(
+                text = "What you will be do?",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, top = 40.dp)
+                    .padding(top = 40.dp),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(top = 12.dp, start = 16.dp, end = 16.dp),
+                userScrollEnabled = true,
             ) {
-                CircularProgressIndicator(
-                    0.75f,
-                    modifier = Modifier.padding(top = 8.dp),
-                    strokeWidth = 1.dp
-                )
-                Column(
-                    modifier = Modifier
-                        .padding(start = 24.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        text = taskType.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
+                items(items = listTask) { item ->
+                    TaskItem(
+                        task = item,
+                        onCheckedChange = { check -> onCheckedTask(item, check) },
+                        onDeleteClicked = { onDeleteTask(item) },
+                        onEditClicked = { onEditTask(item) }
                     )
-                    Text(
-                        text = "${taskType.task_list_size_inactive} of ${taskType.task_list_size} Task Done",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                    Divider(color = Color.LightGray, modifier = Modifier.padding(top = 32.dp))
-                }
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, Color.Red),
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "close",
-                        tint = Color.Red
-                    )
-                }
-            }
-
-
-            Row(
-                modifier = Modifier.padding(vertical = 12.dp)
-            ) {
-                TextButton(
-                    onClick = {},
-                    modifier = Modifier.padding(start = 24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ColorLens,
-                        contentDescription = "pick_color"
-                    )
-                    Text(
-                        text = "Pick Color",
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onNewTask,
-                    shape = RectangleShape,
-                    modifier = Modifier
-                        .padding(end = 24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "",
-                        modifier = Modifier.padding(0.dp)
-                    )
-                    Text(text = "Add Task")
-                }
-            }
-
-
-            if (listTask.isNullOrEmpty()) {
-                Text(
-                    text = "What you will be do?",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 40.dp),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.padding(top = 12.dp),
-                    userScrollEnabled = true,
-                ) {
-                    items(items = listTask) { item ->
-                        TaskItem(
-                            task = item,
-                            onCheckedChange = { check -> onCheckedTask(item, check) },
-                            onDeleteClicked = { onDeleteTask(item) },
-                            onEditClicked = { onEditTask(item) }
-                        )
-                    }
                 }
             }
         }

@@ -4,19 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.daniza.simple.todolist.ui.theme.SimpleTodoListTheme
+import com.daniza.simple.todolist.ui.theme.TodoTheme
 import com.daniza.simple.todolist.ui.widget.navigation.MainDestination
 import com.daniza.simple.todolist.ui.widget.navigation.TodoDestination
 import com.daniza.simple.todolist.ui.widget.navigation.TodoNavHost
@@ -30,7 +28,9 @@ class MainActivity : ComponentActivity() {
         val mainViewModel: MainViewModel by viewModels { MainViewModel.Factory }
 
         setContent {
-            MainActivityModule(viewModel = mainViewModel)
+            TodoTheme {
+                MainActivityModule(viewModel = mainViewModel)
+            }
         }
     }
 }
@@ -39,7 +39,8 @@ class MainActivity : ComponentActivity() {
 fun MainActivityModule(
     viewModel: MainViewModel
 ) {
-    SimpleTodoListTheme {
+    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 5.dp) {
+
         val navController = rememberNavController()
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination

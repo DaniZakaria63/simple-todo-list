@@ -39,7 +39,9 @@ fun TodoNavHost(
             ) { navBackStackEntry ->
             val taskType =
                 navBackStackEntry.arguments?.getInt(SingleTaskDestination.taskTypeArgs)
-            SingleTaskScreen(mainViewModel = viewModel, type = taskType)
+            SingleTaskScreen(mainViewModel = viewModel, type = taskType){
+                navController.popBackStack()
+            }
         }
     }
 }

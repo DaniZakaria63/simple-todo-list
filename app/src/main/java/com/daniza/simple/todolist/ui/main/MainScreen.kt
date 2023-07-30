@@ -54,28 +54,26 @@ fun MainScreen(
     viewModel: MainViewModel,
     toSingleTask: (Int) -> Unit,
 ) {
-    Surface(color = MaterialTheme.colorScheme.primary) {
-        var showSplashScreen by remember { mutableStateOf(false) } // default is false
-        if (showSplashScreen) {
-            SplashScreen {
-                showSplashScreen = false
-            }
-        } else {
-            val dummy_task = listOf(
-                TaskModel(title = "test 1"),
-                TaskModel(title = "test 2")
-            )
-            val dummy_type = listOf(
-                TaskTypeModel(name = "one", _task_list = dummy_task),
-                TaskTypeModel(name = "two", _task_list = dummy_task)
-            )
-
-            TodoListScene(
-                mainViewModel = viewModel,
-                modifier = Modifier.fillMaxSize(),
-                onCardClicked = toSingleTask
-            )
+    var showSplashScreen by remember { mutableStateOf(false) } // default is false
+    if (showSplashScreen) {
+        SplashScreen {
+            showSplashScreen = false
         }
+    } else {
+        val dummy_task = listOf(
+            TaskModel(title = "test 1"),
+            TaskModel(title = "test 2")
+        )
+        val dummy_type = listOf(
+            TaskTypeModel(name = "one", _task_list = dummy_task),
+            TaskTypeModel(name = "two", _task_list = dummy_task)
+        )
+
+        TodoListScene(
+            mainViewModel = viewModel,
+            modifier = Modifier.fillMaxSize(),
+            onCardClicked = toSingleTask
+        )
     }
 }
 
@@ -92,10 +90,10 @@ private fun TodoListScene(
         initialValue = TaskUiState<TaskTypeModel>(isLoading = true)
     )
 
-    if(showNewDialog){
-        TaskTypeDialog(callback = {task, status ->
+    if (showNewDialog) {
+        TaskTypeDialog(callback = { task, status ->
             showNewDialog = false
-            if(status == Status.DATA) mainViewModel.saveNewTaskType(task!!)
+            if (status == Status.DATA) mainViewModel.saveNewTaskType(task!!)
         })
     }
 
@@ -106,7 +104,7 @@ private fun TodoListScene(
             onCheckChanged = { task, b ->
                 mainViewModel.updateCheckedTask(task, b)
             },
-            onButtonAddClicked = {showNewDialog = true}
+            onButtonAddClicked = { showNewDialog = true }
         )
 
         Status.ERROR -> ErrorScreen(
@@ -126,8 +124,7 @@ private fun TodoTaskTypeContent(
     onCheckChanged: (TaskModel, Boolean) -> Unit,
     onButtonAddClicked: () -> Unit,
 ) {
-    Log.i("ASD", "TodoTaskTypeContent: $listTaskType")
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.padding(24.dp))
 
@@ -136,7 +133,7 @@ private fun TodoTaskTypeContent(
                     text = buildAnnotatedString {
                         withStyle(
                             style = SpanStyle(
-                                color = Color.Black,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
                         ) {
@@ -144,15 +141,14 @@ private fun TodoTaskTypeContent(
                         }
                         withStyle(
                             style = SpanStyle(
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Light
                             )
                         ) {
                             append(" Lists")
                         }
                     },
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    style = MaterialTheme.typography.headlineLarge
                 )
 //                Divider(color = Color.Black) // TODO: Update this into similar like the mockup
             }
@@ -162,7 +158,7 @@ private fun TodoTaskTypeContent(
                 onClick = onButtonAddClicked,
                 shape = RoundedCornerShape(4.dp),
                 border = BorderStroke(1.dp, Color.Gray),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
@@ -174,7 +170,7 @@ private fun TodoTaskTypeContent(
                 text = "Add List",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 12.dp, bottom = 32.dp)
             )
 
@@ -183,7 +179,8 @@ private fun TodoTaskTypeContent(
                 Text(
                     text = "You haven't add any list yet",
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineMedium
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             } else {
                 LazyRow {

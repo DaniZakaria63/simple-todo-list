@@ -18,9 +18,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DisplayMode
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +44,7 @@ import com.daniza.simple.todolist.data.model.toDateString
 import com.daniza.simple.todolist.data.source.Status
 
 enum class TaskDialogType {
-    NEW, EDIT, DELETE, TASK_TYPE
+    NEW, EDIT, DELETE, TASK_DELETE
 }
 
 @Composable
@@ -54,7 +55,10 @@ fun TaskTypeDialog(
         mutableStateOf(TextFieldValue(""))
     }
     Dialog(onDismissRequest = { callback(null, Status.ERROR) }) {
-        Surface(shape = RoundedCornerShape(4.dp), color = Color.White) {
+        Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
             Column(
                 modifier = Modifier
                     .padding(top = 12.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
@@ -64,11 +68,16 @@ fun TaskTypeDialog(
                 Text(
                     text = "New Category of Task",
                     modifier = Modifier.padding(top = 24.dp, bottom = 20.dp),
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                TextField(value = title, onValueChange = { title = it }, label = {
-                    Text(text = "Title")
-                })
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = {
+                        Text(text = "Title")
+                    },
+                    shape = OutlinedTextFieldDefaults.shape,
+                )
                 Button(onClick = {
                     callback(TaskTypeModel(name = title.text), Status.DATA)
                 }, modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)) {
@@ -81,6 +90,7 @@ fun TaskTypeDialog(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDialog(
     type: TaskDialogType,
@@ -99,6 +109,7 @@ fun TaskDialog(
         TaskDialogType.DELETE -> DialogDeleteTask(taskModel = taskModel, onButtonClicked = callback)
         else ->
             DialogFormTask(
+                type = type,
                 title = title,
                 description = description,
                 duedate = taskModel.dueDate,
@@ -142,6 +153,7 @@ private fun DialogDeleteTask(
 @ExperimentalMaterial3Api
 @Composable
 private fun DialogFormTask(
+    type: TaskDialogType,
     title: TextFieldValue,
     description: TextFieldValue,
     duedate: String,
@@ -150,7 +162,11 @@ private fun DialogFormTask(
     onDescChange: (TextFieldValue) -> Unit,
 ) {
     Dialog(onDismissRequest = { onButtonClicked(TaskModel(id = 0), Status.ERROR) }) {
-        Surface(shape = RoundedCornerShape(12.dp), color = Color.White) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 3.dp
+        ) {
             Box(contentAlignment = Alignment.Center) {
                 Column(
                     modifier = Modifier
@@ -194,7 +210,7 @@ private fun DialogFormTask(
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Date: $datePickerValue",
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .weight(1f)
                                 .align(alignment = Alignment.CenterVertically)
@@ -207,7 +223,7 @@ private fun DialogFormTask(
 
                     Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
-                    Button(onClick = {
+                    Button(modifier = Modifier.align(alignment = Alignment.CenterHorizontally),onClick = {
                         onButtonClicked(
                             TaskModel(
                                 title = title.text,
@@ -220,8 +236,9 @@ private fun DialogFormTask(
                                 Status.DATA
                             }
                         )
-                    }) {
-                        Text(text = "Done")
+                    },) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "add_new_list")
+                        Text(text = if(type == TaskDialogType.NEW) "Add To List" else "Update The Task", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

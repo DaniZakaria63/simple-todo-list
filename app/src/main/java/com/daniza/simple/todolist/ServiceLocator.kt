@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.daniza.simple.todolist.data.TodoRepository
 import com.daniza.simple.todolist.data.local.TodoDatabase
+import com.daniza.simple.todolist.data.local.TodoDatabase.Companion.MIGRATION_2_3
 import com.daniza.simple.todolist.data.local.task.TaskDao
 import com.daniza.simple.todolist.data.local.type.TypeDao
 

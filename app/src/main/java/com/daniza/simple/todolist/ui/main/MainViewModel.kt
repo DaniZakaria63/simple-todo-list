@@ -21,16 +21,16 @@ import kotlinx.coroutines.flow.shareIn
 class MainViewModel(
     private val repository: TaskRepository
 ) : ViewModel() {
-    val allTasksTypeData: Flow<TaskUiState<TaskTypeModel>>
+    val allTasksTypeData: SharedFlow<TaskUiState<TaskTypeModel>>
         get() = repository.observeTypes()
             .map { result ->
                 when (result) {
                     is Result.Error -> TaskUiState(isError = true)
-                    is Result.Success -> TaskUiState(result.data)
+                    is Result.Success -> TaskUiState(result.data.sortedByDescending { it.id })
 
                     Result.Loading -> TaskUiState(isLoading = true)
                 }
-            }
+            }.shareIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed())
 
     fun getOneTaskType(taskId: Int): SharedFlow<TaskUiState<TaskTypeModel>> {
         return repository.getTaskTypeOne(taskId).map { result ->
@@ -55,6 +55,11 @@ class MainViewModel(
 
     fun saveNewTaskType(type: TaskTypeModel) {
         repository.saveTaskType(type)
+    }
+
+
+    fun deleteTaskType(type: TaskTypeModel) {
+        repository.deleteTaskType(type)
     }
 
     /*its okay to make all saved data always hot*/

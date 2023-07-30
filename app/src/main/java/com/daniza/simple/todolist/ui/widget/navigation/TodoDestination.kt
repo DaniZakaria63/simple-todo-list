@@ -1,6 +1,7 @@
 package com.daniza.simple.todolist.ui.widget.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Task
@@ -21,8 +22,8 @@ object MainDestination: TodoDestination{
 }
 
 object SettingDestination: TodoDestination{
-    override val icon: ImageVector = Icons.Filled.Settings
-    override val route: String = "setting"
+    override val icon: ImageVector = Icons.Filled.BarChart
+    override val route: String = "analysis"
 }
 
 object SingleTaskDestination: TodoDestination{

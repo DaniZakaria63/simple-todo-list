@@ -58,7 +58,8 @@ class TodoRepository(
         return map.keys.map { typeEntity ->
             val taskList: List<TaskEntity>? = map[typeEntity]
             typeEntity.toDomainModelWithTasks(
-                if (taskList.isNullOrEmpty()) listOf() else taskList.asDomainsModel()
+                if (taskList.isNullOrEmpty()) listOf() else taskList.asDomainsModel().sortedWith(
+                    compareBy({it.checked}, {it.id}))
             )
         }
     }
@@ -67,6 +68,12 @@ class TodoRepository(
     override fun saveTaskType(type: TaskTypeModel) {
         appCoroutine.launch {
             launch { withContext(ioDispatcher) { typeDao.saveOne(type.asDatabaseModel()) } }
+        }
+    }
+
+    override fun deleteTaskType(type: TaskTypeModel) {
+        appCoroutine.launch {
+            launch { withContext(ioDispatcher){ typeDao.deleteOne(type.asDatabaseModel())} }
         }
     }
 

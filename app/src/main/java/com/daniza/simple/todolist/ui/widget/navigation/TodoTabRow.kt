@@ -15,20 +15,19 @@ fun TodoTabRow(
     onTabSelected: (TodoDestination) -> Unit,
     currentScreen: TodoDestination
 ) {
-    Surface(
+    Row(
         modifier = Modifier
             .height(TabHeight)
             .fillMaxWidth()
+            .selectableGroup()
     ) {
-        Row(Modifier.selectableGroup()) {
-            allScreens.forEach { screen ->
-                TodoTabRowItem(
-                    text = screen.route,
-                    icon = screen.icon,
-                    onSelected = { onTabSelected(screen) },
-                    selected = currentScreen == screen
-                )
-            }
+        allScreens.forEach { screen ->
+            TodoTabRowItem(
+                text = screen.route,
+                icon = screen.icon,
+                onSelected = { onTabSelected(screen) },
+                selected = currentScreen == screen
+            )
         }
     }
 }

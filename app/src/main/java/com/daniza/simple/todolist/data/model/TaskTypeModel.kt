@@ -3,10 +3,12 @@ package com.daniza.simple.todolist.data.model
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import com.daniza.simple.todolist.data.local.type.TaskTypeEntity
+import com.daniza.simple.todolist.ui.theme.CardColor
 
 data class TaskTypeModel(
     val id: Int = 0,
     val name: String = "",
+    val color: CardColor = CardColor.NONE,
     val date_created: String = "",
     var _task_list: List<TaskModel> = listOf()
 ) {
@@ -18,7 +20,7 @@ data class TaskTypeModel(
 
     fun asDatabaseModel(): TaskTypeEntity {
         return TaskTypeEntity(
-            id, name, date_created
+            id, name, color, date_created
         )
     }
 }

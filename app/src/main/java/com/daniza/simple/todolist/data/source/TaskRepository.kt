@@ -22,4 +22,6 @@ interface TaskRepository {
     fun observeTypeOne(typeId: String): Flow<Result<List<TaskModel>>>
 
     fun getTaskTypeOne(typeId: Int) : Flow<Result<TaskTypeModel>>
+
+    fun deleteTaskType(type: TaskTypeModel)
 }
