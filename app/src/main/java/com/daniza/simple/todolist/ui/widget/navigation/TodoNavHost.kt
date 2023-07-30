@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.daniza.simple.todolist.ui.main.MainScreen
 import com.daniza.simple.todolist.ui.main.MainViewModel
-import com.daniza.simple.todolist.ui.setting.SettingScreen
+import com.daniza.simple.todolist.ui.setting.AnalyticScreen
 import com.daniza.simple.todolist.ui.single_task.SingleTaskScreen
 
 @Composable
@@ -27,8 +27,8 @@ fun TodoNavHost(
             }
         }
 
-        composable(route = SettingDestination.route) {
-            SettingScreen(viewModel = viewModel)
+        composable(route = AnalysisDestination.route) {
+            AnalyticScreen(viewModel = viewModel)
 //            navController.navigateSingleTopTo(SettingDestination.route)
         }
 

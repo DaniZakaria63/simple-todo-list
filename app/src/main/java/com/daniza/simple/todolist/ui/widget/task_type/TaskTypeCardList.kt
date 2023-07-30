@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
+import com.daniza.simple.todolist.ui.theme.parseAsBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,10 +34,7 @@ fun TaskTypeCardList(
             defaultElevation = 12.dp
         ),
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Red,
-            contentColor = Color.White
-        ),
+        colors = taskType.color.parseAsBackground(),
         onClick = { onCardClicked(taskType.id) }
     ) {
 

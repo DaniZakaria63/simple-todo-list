@@ -2,6 +2,7 @@
 
 package com.daniza.simple.todolist.ui.widget.task
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -42,9 +42,11 @@ import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.model.toDateString
 import com.daniza.simple.todolist.data.source.Status
+import com.daniza.simple.todolist.ui.theme.CardColor
+import com.daniza.simple.todolist.ui.widget.common.CustomColorSelector
 
 enum class TaskDialogType {
-    NEW, EDIT, DELETE, TASK_DELETE
+    NOTHING, NEW, EDIT, DELETE, TASK_DELETE, COLOR_PICKER
 }
 
 @Composable
@@ -53,6 +55,9 @@ fun TaskTypeDialog(
 ) {
     var title by remember {
         mutableStateOf(TextFieldValue(""))
+    }
+    var cardColor by remember {
+        mutableStateOf(CardColor.NONE)
     }
     Dialog(onDismissRequest = { callback(null, Status.ERROR) }) {
         Surface(
@@ -78,8 +83,13 @@ fun TaskTypeDialog(
                     },
                     shape = OutlinedTextFieldDefaults.shape,
                 )
+                Text(text = "Card Color", modifier = Modifier.padding(top = 24.dp, bottom = 8.dp))
+                CustomColorSelector(
+                    modifier = Modifier.padding(top = 8.dp),
+                    value = CardColor.NONE,
+                    colorChanged = { color -> cardColor = color })
                 Button(onClick = {
-                    callback(TaskTypeModel(name = title.text), Status.DATA)
+                    callback(TaskTypeModel(name = title.text, color = cardColor), Status.DATA)
                 }, modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)) {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
                     Text(text = "Add Category")
@@ -223,22 +233,28 @@ private fun DialogFormTask(
 
                     Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
-                    Button(modifier = Modifier.align(alignment = Alignment.CenterHorizontally),onClick = {
-                        onButtonClicked(
-                            TaskModel(
-                                title = title.text,
-                                description = description.text,
-                                dueDate = datePickerValue
-                            ),
-                            if (title.text.isEmpty() || title.text.equals("-")) {
-                                Status.ERROR
-                            } else {
-                                Status.DATA
-                            }
-                        )
-                    },) {
+                    Button(
+                        modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                        onClick = {
+                            onButtonClicked(
+                                TaskModel(
+                                    title = title.text,
+                                    description = description.text,
+                                    dueDate = datePickerValue
+                                ),
+                                if (title.text.isEmpty() || title.text.equals("-")) {
+                                    Status.ERROR
+                                } else {
+                                    Status.DATA
+                                }
+                            )
+                        },
+                    ) {
                         Icon(imageVector = Icons.Filled.Add, contentDescription = "add_new_list")
-                        Text(text = if(type == TaskDialogType.NEW) "Add To List" else "Update The Task", style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = if (type == TaskDialogType.NEW) "Add To List" else "Update The Task",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }

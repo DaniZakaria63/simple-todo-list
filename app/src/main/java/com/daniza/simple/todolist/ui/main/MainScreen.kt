@@ -1,8 +1,6 @@
 package com.daniza.simple.todolist.ui.main
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,8 +41,6 @@ import com.daniza.simple.todolist.data.source.TaskUiState
 import com.daniza.simple.todolist.ui.splash.SplashScreen
 import com.daniza.simple.todolist.ui.widget.common.ErrorScreen
 import com.daniza.simple.todolist.ui.widget.common.LoadingScreen
-import com.daniza.simple.todolist.ui.widget.task.TaskDialog
-import com.daniza.simple.todolist.ui.widget.task.TaskDialogType
 import com.daniza.simple.todolist.ui.widget.task.TaskTypeDialog
 import com.daniza.simple.todolist.ui.widget.task_type.TaskTypeCardList
 
@@ -60,15 +55,6 @@ fun MainScreen(
             showSplashScreen = false
         }
     } else {
-        val dummy_task = listOf(
-            TaskModel(title = "test 1"),
-            TaskModel(title = "test 2")
-        )
-        val dummy_type = listOf(
-            TaskTypeModel(name = "one", _task_list = dummy_task),
-            TaskTypeModel(name = "two", _task_list = dummy_task)
-        )
-
         TodoListScene(
             mainViewModel = viewModel,
             modifier = Modifier.fillMaxSize(),

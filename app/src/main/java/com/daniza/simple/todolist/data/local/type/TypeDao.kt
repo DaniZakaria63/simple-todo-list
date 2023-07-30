@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.daniza.simple.todolist.data.local.task.TaskEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -28,6 +29,9 @@ interface TypeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun saveOne(taskTypeEntity: TaskTypeEntity)
+
+    @Update
+    fun updateOne(typeEntity: TaskTypeEntity)
 
     @Delete
     fun deleteOne(typeEntity: TaskTypeEntity)

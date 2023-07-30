@@ -78,6 +78,12 @@ class TodoRepository(
     }
 
 
+    override fun updateTypeColorValue(type: TaskTypeModel) {
+        appCoroutine.launch {
+            launch { withContext(ioDispatcher){ typeDao.updateOne(type.asDatabaseModel()) } }
+        }
+    }
+
     /*Tasks Data Provider and Manipulation*/
     override fun observeTasks(): Flow<Result<List<TaskModel>>> {
         return taskDao.findAll().map { value ->

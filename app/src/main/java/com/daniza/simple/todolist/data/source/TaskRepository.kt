@@ -24,4 +24,5 @@ interface TaskRepository {
     fun getTaskTypeOne(typeId: Int) : Flow<Result<TaskTypeModel>>
 
     fun deleteTaskType(type: TaskTypeModel)
+    fun updateTypeColorValue(type: TaskTypeModel)
 }

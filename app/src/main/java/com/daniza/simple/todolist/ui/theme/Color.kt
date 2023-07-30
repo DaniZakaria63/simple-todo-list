@@ -1,5 +1,8 @@
 package com.daniza.simple.todolist.ui.theme
 
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val md_theme_light_primary = Color(0xFF006C47)
@@ -65,8 +68,42 @@ val md_theme_dark_outlineVariant = Color(0xFF404943)
 val md_theme_dark_scrim = Color(0xFF000000)
 
 
+val card_light_green_bg = md_theme_dark_primary
+val card_light_green_text = md_theme_dark_onPrimary
+
+val card_dark_green_bg = md_theme_dark_primaryContainer
+val card_dark_green_text = md_theme_dark_onPrimaryContainer
+
+val card_black_bg = md_theme_dark_surface
+val card_black_text = md_theme_dark_onSurface
+
+val card_grey_bg = md_theme_light_outline
+val card_grey_text = md_theme_light_onPrimary
+
 val seed = Color(0xFF00724B)
 
 enum class CardColor(val value: Int) {
     NONE(0), LIGHT_GREEN(1), DARK_GREEN(2), BLACK(3), GREY(4),
 }
+
+@Composable
+fun CardColor.parseAsBackground(): CardColors =
+    when(this){
+        CardColor.LIGHT_GREEN -> CardDefaults.cardColors(
+            containerColor = card_light_green_bg,
+            contentColor = card_light_green_text
+        )
+        CardColor.DARK_GREEN -> CardDefaults.cardColors(
+            containerColor = card_dark_green_bg,
+            contentColor = card_dark_green_text
+        )
+        CardColor.BLACK -> CardDefaults.cardColors(
+            containerColor = card_black_bg,
+            contentColor = card_black_text
+        )
+        CardColor.GREY -> CardDefaults.cardColors(
+            containerColor = card_grey_bg,
+            contentColor = card_grey_text
+        )
+        else -> CardDefaults.cardColors()
+    }

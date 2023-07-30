@@ -52,7 +52,7 @@ fun TaskTypeCardItem(
         Text(
             text = item.title, maxLines = 1, textAlign = TextAlign.Center,
             style = if (item.checked) TextStyle(textDecoration = TextDecoration.LineThrough)
-            else MaterialTheme.typography.bodyLarge,
+            else MaterialTheme.typography.labelLarge,
         )
     }
 }

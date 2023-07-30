@@ -8,7 +8,7 @@ import com.daniza.simple.todolist.ui.theme.CardColor
 data class TaskTypeModel(
     val id: Int = 0,
     val name: String = "",
-    val color: CardColor = CardColor.NONE,
+    var color: CardColor = CardColor.NONE,
     val date_created: String = "",
     var _task_list: List<TaskModel> = listOf()
 ) {

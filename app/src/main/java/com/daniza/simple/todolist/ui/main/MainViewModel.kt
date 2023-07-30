@@ -12,6 +12,7 @@ import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.data.source.TaskRepository
 import com.daniza.simple.todolist.data.source.TaskUiState
+import com.daniza.simple.todolist.ui.theme.CardColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -62,6 +63,7 @@ class MainViewModel(
         repository.deleteTaskType(type)
     }
 
+
     /*its okay to make all saved data always hot*/
     //val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
 
@@ -108,6 +110,11 @@ class MainViewModel(
     /*just delete*/
     fun deleteTask(task: TaskModel) {
         repository.deleteTask(task)
+    }
+
+    fun updateColorValue(typeModel: TaskTypeModel, color: CardColor) {
+        typeModel.color = color
+        repository.updateTypeColorValue(typeModel)
     }
 
 

@@ -2,7 +2,6 @@ package com.daniza.simple.todolist.ui.single_task
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,37 +50,9 @@ import com.daniza.simple.todolist.ui.widget.task.TaskDialogType
 import com.daniza.simple.todolist.ui.widget.task.TaskItem
 import com.daniza.simple.todolist.ui.widget.task.TaskList
 import com.daniza.simple.todolist.data.source.TaskUiState
-
-
-val taskListDummy: TaskUiState<TaskModel> = TaskUiState(
-    dataList = listOf(
-        TaskModel(
-            title = "first list",
-            description = "first description",
-            dueDate = "2021-2-2"
-        ),
-        TaskModel(
-            title = "the second list",
-            description = "the second description",
-            dueDate = "2021-2-2"
-        ),
-        TaskModel(
-            title = "the third list",
-            description = "the third description",
-            dueDate = "2021-2-2"
-        ),
-        TaskModel(
-            title = "first list",
-            description = "first description",
-            dueDate = "2021-2-2"
-        ),
-        TaskModel(
-            title = "first list",
-            description = "first description",
-            dueDate = "2021-2-2"
-        ),
-    )
-) // listen to Tasks data
+import com.daniza.simple.todolist.ui.theme.CardColor
+import com.daniza.simple.todolist.ui.widget.common.CustomColorSelector
+import com.daniza.simple.todolist.ui.widget.common.CustomSelectorDialog
 
 @Composable
 fun SingleTaskScreen(
@@ -90,7 +60,7 @@ fun SingleTaskScreen(
     type: Int? = 0,
     onPopBack: () -> Unit,
 ) {
-    var showDialog by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(TaskDialogType.NOTHING) }
     var stateTask by remember { mutableStateOf(TaskModel(type_id = type ?: 0)) }
 
     /* Listening to the parent which is TaskTypeModel within its value*/
@@ -106,43 +76,62 @@ fun SingleTaskScreen(
 
     /* Show the dialog first, double checking */
     when (showDialog) {
-        "DELETE_TASK" -> TaskDialog(
+        TaskDialogType.COLOR_PICKER -> CustomSelectorDialog(
+            value = taskTypeModel.dataSingle?.color ?: CardColor.NONE,
+            callback = { color, status ->
+            if (status == Status.DATA) mainViewModel.updateColorValue(
+                taskTypeModel.dataSingle!!,
+                color
+            )
+            Log.d("ASD", "SingleTaskScreen: ${color.ordinal}")
+            showDialog = TaskDialogType.NOTHING
+        })
+
+        TaskDialogType.TASK_DELETE -> TaskDialog(
             type = TaskDialogType.DELETE,
-            taskModel = stateTask.apply { title = "All of the data will be lost." },
+            taskModel = stateTask.apply {
+                title = "All of the data will be lost and cannot be undone"
+            },
             callback = { model, status ->
-                if(status == Status.DATA) {
+                showDialog = TaskDialogType.NOTHING
+                if (status == Status.DATA) {
                     mainViewModel.deleteTaskType(taskTypeModel.dataSingle!!)
-                    showDialog = ""
                     onPopBack()
                 }
             }
         )
-        "DELETE" -> TaskDialog(
+
+        TaskDialogType.DELETE -> TaskDialog(
             TaskDialogType.DELETE,
             taskModel = stateTask,
             callback = { model, status ->
-                if (status == Status.DATA) mainViewModel.deleteTask(model);showDialog = ""
+                showDialog = TaskDialogType.NOTHING
+                if (status == Status.DATA) {
+                    mainViewModel.deleteTask(model)
+                }
             })
 
-        "EDIT" -> TaskDialog(
+        TaskDialogType.EDIT -> TaskDialog(
             TaskDialogType.EDIT,
             taskModel = stateTask,
             callback = { model, status ->
-                Log.d("ASD", "TodoListScene: $status")
-                if (status == Status.DATA) mainViewModel.editTask(
-                    type ?: 0,
-                    stateTask,
-                    model
-                );showDialog = ""
+                showDialog = TaskDialogType.NOTHING
+                if (status == Status.DATA) {
+                    mainViewModel.editTask(type ?: 0, stateTask, model)
+                }
             })
 
-        "NEW" -> TaskDialog(
+        TaskDialogType.NEW -> TaskDialog(
             TaskDialogType.NEW,
             taskModel = TaskModel(id = 0),
             callback = { model, status ->
-                if (status == Status.DATA) mainViewModel.saveNewTask(type ?: 0, model);showDialog =
-                ""
+                showDialog = TaskDialogType.NOTHING
+                if (status == Status.DATA) {
+                    mainViewModel.saveNewTask(type ?: 0, model)
+                }
             })
+
+        else -> {}
     }
 
     when (taskTypeModel.status) {
@@ -150,10 +139,11 @@ fun SingleTaskScreen(
             taskType = taskTypeModel.dataSingle!!,
             listTask = taskTypeModel.dataSingle?.task_list!!,
             onCheckedTask = { task, b -> mainViewModel.updateCheckedTask(task, b) },
-            onDeleteTask = { task -> showDialog = "DELETE";stateTask = task },
-            onEditTask = { task -> showDialog = "EDIT";stateTask = task },
-            onNewTask = { showDialog = "NEW" },
-            onDeleteType = {showDialog="DELETE_TASK";}
+            onDeleteTask = { task -> showDialog = TaskDialogType.DELETE;stateTask = task },
+            onEditTask = { task -> showDialog = TaskDialogType.EDIT;stateTask = task },
+            onNewTask = { showDialog = TaskDialogType.NEW },
+            onDeleteType = { showDialog = TaskDialogType.TASK_DELETE },
+            onColorPicker = { showDialog = TaskDialogType.COLOR_PICKER }
         )
 
         Status.ERROR -> ErrorScreen(
@@ -174,6 +164,7 @@ private fun SingleTaskContent(
     onEditTask: (TaskModel) -> Unit,
     onNewTask: () -> Unit,
     onDeleteType: () -> Unit,
+    onColorPicker: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -206,7 +197,10 @@ private fun SingleTaskContent(
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 8.dp)
                 )
-                Divider(color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.padding(top = 32.dp))
+                Divider(
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(top = 32.dp)
+                )
             }
             Button(
                 onClick = onDeleteType,
@@ -229,7 +223,7 @@ private fun SingleTaskContent(
             modifier = Modifier.padding(vertical = 12.dp)
         ) {
             TextButton(
-                onClick = {},
+                onClick = onColorPicker,
                 modifier = Modifier.padding(start = 24.dp)
             ) {
                 Icon(
@@ -278,71 +272,6 @@ private fun SingleTaskContent(
                         onDeleteClicked = { onDeleteTask(item) },
                         onEditClicked = { onEditTask(item) }
                     )
-                }
-            }
-        }
-    }
-}
-
-/* OLD VERSION CODE (deprecated)
-*  Change to SingleTaskContent instead
-* */
-
-@Composable
-private fun TodoListContent(
-    listTask: List<TaskModel>,
-    onCheckedTask: (TaskModel, Boolean) -> Unit,
-    onDeleteTask: (TaskModel) -> Unit,
-    onEditTask: (TaskModel) -> Unit,
-    onNewTask: (() -> Unit),
-) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(
-                    vertical = 20.dp,
-                    horizontal = 24.dp
-                )
-        ) {
-            Text(
-                text = "Simple Todo List",
-                modifier = Modifier
-                    .padding(vertical = 24.dp)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally),
-                style = MaterialTheme.typography.titleMedium.copy(color = Color.Black)
-            )
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-
-                TaskList(
-                    listTask = listTask,
-                    onCheckedTask = onCheckedTask,
-                    onDeleteTask = onDeleteTask,
-                    onEditTask = onEditTask
-                )
-
-                // Show the FAB
-                val showFab by remember {
-                    mutableStateOf(true)
-                }
-
-                if (showFab) {
-                    FloatingActionButton(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        onClick = onNewTask,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .navigationBarsPadding()
-                            .padding(bottom = 8.dp)
-                    ) {
-                        Icon(imageVector = Icons.Filled.Add, contentDescription = "")
-                    }
                 }
             }
         }
