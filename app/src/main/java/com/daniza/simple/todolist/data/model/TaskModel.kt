@@ -29,3 +29,9 @@ fun Long.toDateString(calendar: Calendar = Calendar.getInstance()) : String{
     calendar.timeInMillis = this
     return dateFormat.format(calendar.time)
 }
+
+data class TaskAnalyticModel(
+    val total: Int = 0,
+    val finished: Int = 0,
+    val active: Int = 0,
+)

@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.daniza.simple.todolist.data.model.TaskAnalyticModel
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,4 +31,15 @@ interface TaskDao {
 
     @Query("DELETE FROM tasks")
     fun deleteAll()
+
+
+    /* analytic functionality */
+    @Query("SELECT " +
+            "(SELECT COUNT(*)  FROM tasks) AS total, " +
+            "(SELECT COUNT(*) FROM tasks WHERE tasks.is_finished = 1) AS finished, " +
+            "(SELECT COUNT(*) FROM tasks WHERE tasks.is_finished=0) AS active")
+    suspend fun getAllTaskAnalytic() : TaskAnalyticModel
+
+    @Query("SELECT COUNT(*) AS total FROM tasks WHERE task_type_id = :typeId")
+    suspend fun getTaskCountFromTypeId(typeId: Int) : Int
 }

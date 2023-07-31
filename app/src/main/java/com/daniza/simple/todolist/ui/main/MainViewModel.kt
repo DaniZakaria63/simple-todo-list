@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.daniza.simple.todolist.TodoApplication
+import com.daniza.simple.todolist.data.model.StatisticsModel
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.source.Result
@@ -16,6 +17,7 @@ import com.daniza.simple.todolist.ui.theme.CardColor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 
@@ -117,6 +119,12 @@ class MainViewModel(
         repository.updateTypeColorValue(typeModel)
     }
 
+    /* Statistical listener*/
+    val allStatisticsData : SharedFlow<TaskUiState<StatisticsModel>> get()=
+        repository.provideStatisticsData()
+            .map { item-> TaskUiState(dataList = item) }
+            .catch { item -> TaskUiState<StatisticsModel>(isError = true) }
+            .shareIn(viewModelScope, SharingStarted.Lazily)
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

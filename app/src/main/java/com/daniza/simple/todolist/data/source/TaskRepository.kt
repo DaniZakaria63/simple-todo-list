@@ -1,5 +1,6 @@
 package com.daniza.simple.todolist.data.source
 
+import com.daniza.simple.todolist.data.model.StatisticsModel
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
 import kotlinx.coroutines.flow.Flow
@@ -25,4 +26,5 @@ interface TaskRepository {
 
     fun deleteTaskType(type: TaskTypeModel)
     fun updateTypeColorValue(type: TaskTypeModel)
+    fun provideStatisticsData(): Flow<List<StatisticsModel>>
 }

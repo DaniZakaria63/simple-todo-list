@@ -5,6 +5,8 @@ import com.daniza.simple.todolist.data.local.task.TaskEntity
 import com.daniza.simple.todolist.data.local.task.asDomainsModel
 import com.daniza.simple.todolist.data.local.type.TaskTypeEntity
 import com.daniza.simple.todolist.data.local.type.TypeDao
+import com.daniza.simple.todolist.data.model.StatisticsModel
+import com.daniza.simple.todolist.data.model.TaskAnalyticModel
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.data.source.Result
@@ -16,12 +18,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 const val DB_THROWABLE_MESSAGE = "Check application database for task type table"
+
 class TodoRepository(
     private val taskDao: TaskDao,
     private val typeDao: TypeDao,
@@ -54,12 +58,13 @@ class TodoRepository(
         }
     }
 
-    private fun parseTypeMapToList(map: Map<TaskTypeEntity, List<TaskEntity>>) : List<TaskTypeModel>{
+    private fun parseTypeMapToList(map: Map<TaskTypeEntity, List<TaskEntity>>): List<TaskTypeModel> {
         return map.keys.map { typeEntity ->
             val taskList: List<TaskEntity>? = map[typeEntity]
             typeEntity.toDomainModelWithTasks(
                 if (taskList.isNullOrEmpty()) listOf() else taskList.asDomainsModel().sortedWith(
-                    compareBy({it.checked}, {it.id}))
+                    compareBy({ it.checked }, { it.id })
+                )
             )
         }
     }
@@ -73,14 +78,14 @@ class TodoRepository(
 
     override fun deleteTaskType(type: TaskTypeModel) {
         appCoroutine.launch {
-            launch { withContext(ioDispatcher){ typeDao.deleteOne(type.asDatabaseModel())} }
+            launch { withContext(ioDispatcher) { typeDao.deleteOne(type.asDatabaseModel()) } }
         }
     }
 
 
     override fun updateTypeColorValue(type: TaskTypeModel) {
         appCoroutine.launch {
-            launch { withContext(ioDispatcher){ typeDao.updateOne(type.asDatabaseModel()) } }
+            launch { withContext(ioDispatcher) { typeDao.updateOne(type.asDatabaseModel()) } }
         }
     }
 
@@ -131,5 +136,54 @@ class TodoRepository(
                 taskDao.deleteOne(task.asDatabaseModel())
             }
         }
+    }
+
+
+    /* Statistical Code Type */
+    override fun provideStatisticsData(): Flow<List<StatisticsModel>> = flow {
+        val statistic: ArrayList<StatisticsModel> = ArrayList()
+        val total_task_type: Int = provideAllTypeCount()
+        val task_type_list: List<TaskTypeEntity> = provideAllTask()
+
+        statistic.add(
+            StatisticsModel(
+                "Total Categories",
+                "Total categories of task",
+                total_task_type.toString()
+            )
+        )
+        task_type_list.forEachIndexed { index, type ->
+            val total_task_count = provideTaskCountByType(type.id)
+            statistic.add(
+                StatisticsModel(
+                    type.name,
+                    type.name,
+                    total_task_count.toString()
+                )
+            )
+        }
+
+        val taskAnalytic: TaskAnalyticModel = provideAllTaskCount()
+        statistic.add(StatisticsModel("Total Task Listed", "", taskAnalytic.total.toString()))
+        statistic.add(StatisticsModel("Total Finished Task", "", taskAnalytic.finished.toString()))
+        statistic.add(StatisticsModel("Total Active Task", "", taskAnalytic.active.toString()))
+
+        emit(statistic)
+    }
+
+    private suspend fun provideAllTaskCount(): TaskAnalyticModel {
+        return taskDao.getAllTaskAnalytic()
+    }
+
+    private suspend fun provideAllTypeCount(): Int {
+        return typeDao.countAllType()
+    }
+
+    private suspend fun provideTaskCountByType(typeId: Int): Int {
+        return taskDao.getTaskCountFromTypeId(typeId)
+    }
+
+    private suspend fun provideAllTask(): List<TaskTypeEntity> {
+        return typeDao.findAllTypeAsList()
     }
 }

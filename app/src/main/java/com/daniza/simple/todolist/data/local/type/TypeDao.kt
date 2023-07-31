@@ -35,4 +35,12 @@ interface TypeDao {
 
     @Delete
     fun deleteOne(typeEntity: TaskTypeEntity)
+
+
+    /* analytic functionality */
+    @Query("SELECT COUNT(*) AS total FROM task_type") // ALL TASK TYPE
+    suspend fun countAllType(): Int
+
+    @Query("SELECT * FROM task_type")
+    suspend fun findAllTypeAsList() : List<TaskTypeEntity>
 }

@@ -28,7 +28,7 @@ fun TodoNavHost(
         }
 
         composable(route = AnalysisDestination.route) {
-            AnalyticScreen(viewModel = viewModel)
+            AnalyticScreen(mainViewModel = viewModel)
 //            navController.navigateSingleTopTo(SettingDestination.route)
         }
 
