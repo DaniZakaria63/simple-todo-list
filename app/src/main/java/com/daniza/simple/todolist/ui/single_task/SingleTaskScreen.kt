@@ -64,9 +64,10 @@ fun SingleTaskScreen(
     var stateTask by remember { mutableStateOf(TaskModel(type_id = type ?: 0)) }
 
     /* Listening to the parent which is TaskTypeModel within its value*/
-    val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.getOneTaskType(type ?: 0)
+    val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.singleTasksTypeData
         .collectAsStateWithLifecycle(initialValue = TaskUiState(isLoading = true))
 
+    mainViewModel.getOneTaskType(type ?: 0)
     /* Listening into list of TaskModel, focusing on the list // Deprecated
     val listTask: TaskUiState<TaskModel> by mainViewModel.updateStateTaskType(type.toString())
         .collectAsStateWithLifecycle(
@@ -176,9 +177,9 @@ private fun SingleTaskContent(
                 .padding(start = 20.dp, top = 40.dp)
         ) {
             CircularProgressIndicator(
-                0.75f,
+                progress = taskType.task_list_progress_percent,
                 modifier = Modifier.padding(top = 8.dp),
-                strokeWidth = 1.dp,
+                strokeWidth = 2.dp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Column(

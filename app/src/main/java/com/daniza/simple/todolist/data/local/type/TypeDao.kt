@@ -28,13 +28,13 @@ interface TypeDao {
     fun findOneWithTask(typeId: Int): Flow<Map<TaskTypeEntity, List<TaskEntity>>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun saveOne(taskTypeEntity: TaskTypeEntity)
+    suspend fun saveOne(taskTypeEntity: TaskTypeEntity)
 
     @Update
-    fun updateOne(typeEntity: TaskTypeEntity)
+    suspend fun updateOne(typeEntity: TaskTypeEntity)
 
     @Delete
-    fun deleteOne(typeEntity: TaskTypeEntity)
+    suspend fun deleteOne(typeEntity: TaskTypeEntity)
 
 
     /* analytic functionality */

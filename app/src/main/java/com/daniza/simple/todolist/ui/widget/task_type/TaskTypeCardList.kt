@@ -41,8 +41,8 @@ fun TaskTypeCardList(
         Column(
             modifier = Modifier.padding(
                 start = 32.dp,
-                top = 56.dp,
-                bottom = 32.dp
+                top = 42.dp,
+                bottom = 24.dp
             )
         ) {
             Text(

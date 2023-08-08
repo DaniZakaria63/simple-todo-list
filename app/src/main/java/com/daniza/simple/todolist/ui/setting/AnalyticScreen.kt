@@ -67,13 +67,13 @@ fun AnalyticCard(
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 text = model.title,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Text(
                 text = model.value,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )

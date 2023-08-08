@@ -14,44 +14,69 @@ import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.data.source.TaskRepository
 import com.daniza.simple.todolist.data.source.TaskUiState
 import com.daniza.simple.todolist.ui.theme.CardColor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: TaskRepository
 ) : ViewModel() {
-    val allTasksTypeData: SharedFlow<TaskUiState<TaskTypeModel>>
-        get() = repository.observeTypes()
-            .map { result ->
-                when (result) {
-                    is Result.Error -> TaskUiState(isError = true)
-                    is Result.Success -> TaskUiState(result.data.sortedByDescending { it.id })
+    private val _allTasksTypeData: MutableStateFlow<TaskUiState<TaskTypeModel>> =
+        MutableStateFlow(TaskUiState(isLoading = true))
 
-                    Result.Loading -> TaskUiState(isLoading = true)
-                }
-            }.shareIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed())
+    val allTasksTypeData: Flow<TaskUiState<TaskTypeModel>>
+        get() = _allTasksTypeData
 
-    fun getOneTaskType(taskId: Int): SharedFlow<TaskUiState<TaskTypeModel>> {
-        return repository.getTaskTypeOne(taskId).map { result ->
-            when (result) {
-                is Result.Success -> TaskUiState(dataSingle = result.data)
-                is Result.Error -> TaskUiState(isError = true)
-                Result.Loading -> TaskUiState(isLoading = true)
+
+    private val _singleTasksTypeData: MutableStateFlow<TaskUiState<TaskTypeModel>> =
+        MutableStateFlow(TaskUiState(isLoading = true))
+    val singleTasksTypeData: Flow<TaskUiState<TaskTypeModel>> get() = _singleTasksTypeData
+
+
+    init {
+        viewModelScope.launch {
+            launch {
+                repository.observeTypes()
+                    .map { result -> parseResult(result, LIST_DATA){
+                        it.sortedByDescending { item -> item.id }
+                    }
+                    }.collect {
+                        _allTasksTypeData.value = it
+                    }
             }
-        }.shareIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed())
+        }
     }
 
-    fun updateStateTaskType(taskId: String): Flow<TaskUiState<TaskModel>> {
-        return repository.observeTypeOne(taskId).map { result ->
-            when (result) {
-                is Result.Success -> TaskUiState<TaskModel>(dataList = result.data)
-                is Result.Error -> TaskUiState(isError = true)
-                Result.Loading -> TaskUiState(isLoading = true)
+
+    fun getOneTaskType(taskId: Int) {
+        viewModelScope.launch {
+            repository.getTaskTypeOne(taskId).map { result ->
+                parseResult(result, SINGLE_DATA)
+            }.collect {
+                _singleTasksTypeData.value = it
             }
+        }
+    }
+
+
+    private fun <T> parseResult(result: Result<T>, type: Int, callback:(List<TaskTypeModel>) -> List<TaskTypeModel>? = {null}): TaskUiState<TaskTypeModel> {
+        return when (result) {
+            is Result.Success -> TaskUiState(
+                dataSingle = if (type == SINGLE_DATA) result.data as TaskTypeModel else null,
+                dataList = if (type == LIST_DATA) callback(result.data as List<TaskTypeModel>) else null,
+            )
+
+            is Result.Error -> TaskUiState(isError = true)
+            Result.Loading -> TaskUiState(isLoading = true)
         }
     }
 
@@ -67,8 +92,7 @@ class MainViewModel(
 
 
     /*its okay to make all saved data always hot*/
-    //val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
-
+    /*val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
     val allListData: SharedFlow<TaskUiState<TaskModel>>
         get() = repository.observeTasks()
             .map { result ->
@@ -86,6 +110,7 @@ class MainViewModel(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed()
             )
+     */
 
     fun updateCheckedTask(task: TaskModel, check: Boolean) {
         task.isFinished = check
@@ -120,13 +145,16 @@ class MainViewModel(
     }
 
     /* Statistical listener*/
-    val allStatisticsData : SharedFlow<TaskUiState<StatisticsModel>> get()=
-        repository.provideStatisticsData()
-            .map { item-> TaskUiState(dataList = item) }
-            .catch { item -> TaskUiState<StatisticsModel>(isError = true) }
-            .shareIn(viewModelScope, SharingStarted.Lazily)
+    val allStatisticsData: Flow<TaskUiState<StatisticsModel>>
+        get() =
+            repository.provideStatisticsData()
+                .map { item -> TaskUiState(dataList = item) }
+                .catch { TaskUiState<StatisticsModel>(isError = true) }
+                .shareIn(viewModelScope, SharingStarted.Lazily)
 
     companion object {
+        private const val SINGLE_DATA = 1
+        private const val LIST_DATA = 2
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application: TodoApplication = (this[APPLICATION_KEY]) as TodoApplication

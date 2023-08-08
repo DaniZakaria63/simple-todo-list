@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class FakeTodoRepository(val dao: TaskDao): TaskRepository {
-    override fun observeTasks(): Flow<Result<List<TaskModel>>> = flow {
+    override suspend fun observeTasks(): Flow<Result<List<TaskModel>>> = flow {
 
     }
 

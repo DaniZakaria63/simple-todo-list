@@ -160,7 +160,7 @@ private fun TodoTaskTypeContent(
                 modifier = Modifier.padding(top = 12.dp, bottom = 32.dp)
             )
 
-            Spacer(modifier = Modifier.padding(32.dp))
+            Spacer(modifier = Modifier.padding(28.dp))
             if (listTaskType.isEmpty()) {
                 Text(
                     text = "You haven't add any list yet",
@@ -175,7 +175,7 @@ private fun TodoTaskTypeContent(
                             taskType = taskType,
                             items = taskType.task_list,
                             modifier = Modifier
-                                .padding(start = 16.dp, end = 8.dp)
+                                .padding(start = 16.dp, end = 8.dp, bottom = 24.dp)
                                 .width(220.dp),
                             onCardClicked = onCardClicked,
                             onCheckChange = onCheckChanged

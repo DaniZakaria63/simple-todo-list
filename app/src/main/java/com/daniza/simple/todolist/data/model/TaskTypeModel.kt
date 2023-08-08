@@ -15,6 +15,7 @@ data class TaskTypeModel(
     val task_list_size: Int get() = _task_list.size
     val task_list_size_inactive: Int get() = _task_list.count { it.checked }
     val task_list_size_active: Int get() = task_list_size - task_list_size_inactive
+    val task_list_progress_percent: Float get() = if (task_list_size < 1) 1f else (task_list_size_inactive * 1f / task_list_size * 1f)
 
     val task_list by mutableStateOf(_task_list)
 
