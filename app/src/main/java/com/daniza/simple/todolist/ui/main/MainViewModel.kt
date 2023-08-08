@@ -1,5 +1,6 @@
 package com.daniza.simple.todolist.ui.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -82,7 +83,11 @@ class MainViewModel(
 
 
     fun saveNewTaskType(type: TaskTypeModel) {
-        repository.saveTaskType(type)
+        try{
+            repository.saveTaskType(type)
+        }catch (e: IllegalArgumentException){
+            Log.e("ASD", "saveNewTaskType: ", e)
+        }
     }
 
 

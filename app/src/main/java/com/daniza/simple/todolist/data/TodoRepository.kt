@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.IllegalArgumentException
+import kotlin.jvm.Throws
 
 const val DB_THROWABLE_MESSAGE = "Check application database for task type table"
 
@@ -78,7 +80,9 @@ class TodoRepository(
     }
 
 
+    @Throws(IllegalArgumentException::class)
     override fun saveTaskType(type: TaskTypeModel) {
+        if (type.name.isEmpty() || type.name.equals("-")) throw IllegalArgumentException("Category name cannot be empty")
         scope.launch {
             typeDao.saveOne(type.asDatabaseModel())
         }
