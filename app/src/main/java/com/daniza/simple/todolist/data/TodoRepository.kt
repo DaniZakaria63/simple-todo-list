@@ -64,7 +64,7 @@ class TodoRepository(
                 val extractedType: TaskTypeModel = parseTypeMapToList(map).get(0)
                 Result.Success(extractedType)
             }.catch {
-                Result.Error(Throwable(DB_THROWABLE_MESSAGE))
+                Result.Error(it)
             }
         }
 

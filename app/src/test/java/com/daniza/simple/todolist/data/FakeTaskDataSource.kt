@@ -19,8 +19,8 @@ class FakeTaskDataSource(
     }
 
     override fun findOne(id: Int): Flow<TaskEntity> = flow {
-        val task = tasks.find{ it.id == id}
-        emit(task?: throw NoSuchElementException("Unknown Task"))
+        val task = tasks.find{ it.id == id} ?: throw NoSuchElementException("Unknown Task")
+        emit(task)
     }
 
     override suspend fun saveOne(task: TaskEntity) {

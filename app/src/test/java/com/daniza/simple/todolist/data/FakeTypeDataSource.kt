@@ -35,13 +35,14 @@ class FakeTypeDataSource(
     }
 
     override fun findOneWithTask(typeId: Int): Flow<Map<TaskTypeEntity, List<TaskEntity>>> = flow {
-        types.find { it.id == typeId }?.let { type ->
-            tasks.findAllWithType(type.id.toString()).collect {
-                delay(200)
-                val value: Map<TaskTypeEntity, List<TaskEntity>> = mapOf(type to it)
+        runBlocking {
+            val types = types.find { it.id == typeId } ?: throw NoSuchElementException("Unknown Category")
+
+            tasks.findAllWithType(types.id.toString()).test {
+                val value: Map<TaskTypeEntity, List<TaskEntity>> = mapOf(types to awaitItem())
                 emit(value)
             }
-        } ?: throw NoSuchElementException("Unknown Category")
+        }
     }
 
     override suspend fun saveOne(taskTypeEntity: TaskTypeEntity) {
@@ -49,9 +50,8 @@ class FakeTypeDataSource(
     }
 
     override suspend fun updateOne(typeEntity: TaskTypeEntity) {
-        types.indexOf(typeEntity).let {
-            types.set(it, typeEntity)
-        }
+        val current = types.find { it.id == typeEntity.id } ?: throw IndexOutOfBoundsException("Unknown data")
+        types[types.indexOf(current)] = typeEntity
     }
 
     override suspend fun deleteOne(typeEntity: TaskTypeEntity) {

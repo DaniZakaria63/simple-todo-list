@@ -23,6 +23,8 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.sameInstance
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
@@ -30,6 +32,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.isNotNull
+import kotlin.time.Duration.Companion.seconds
 
 
 /*
@@ -153,12 +156,11 @@ internal class TodoRepositoryTest {
         repository.saveTaskType(newData)
 
         // Then check the value
-        repository.getTaskTypeOne(newData.id).test {
-            val data = awaitItem()
+        repository.getTaskTypeOne(newData.id).collect {
+            val data = it
 
             assertThat(data, notNullValue())
             assertThat(data, equalTo(Result.Success(newData)))
-            awaitComplete()
         }
     }
 
@@ -190,7 +192,7 @@ internal class TodoRepositoryTest {
     fun todoRepository_taskList_activeAndInactive() = runTest{
         // Given one single data from dummy
         val oneData: TaskModel = dummyTaskList.random().asDomainModel()
-        oneData.apply { this.checked = true }
+        oneData.apply { this.isFinished = true }
 
         // When update task entity
         repository.updateTask(oneData)
@@ -200,28 +202,114 @@ internal class TodoRepositoryTest {
             val getData = awaitItem()
             val data = if(getData is Result.Success) getData.data else null
 
-            assertThat(data, isNotNull())
+            delay(500)
+            assertNotNull(data)
             assertThat(data?.id, `is`(oneData.id))
             assertThat(data?.checked, `is`(true))
 
             awaitComplete()
         }
 
-        delay(5_000)
+        delay(1_000)
 
         // When try to update again
-        repository.updateTask(oneData.apply { this.checked = false })
+        repository.updateTask(oneData.apply { this.isFinished = false })
 
         // Then check once again
         repository.getTask(oneData.id).test {
             val getData = awaitItem()
             val data = if(getData is Result.Success) getData.data else null
 
-            assertThat(data, isNotNull())
+            assertNotNull(data)
             assertThat(data?.id, `is`(oneData.id))
             assertThat(data?.checked, `is`(false))
 
             awaitComplete()
         }
+    }
+
+
+    /*
+    * Expected: Success delete item
+    * Testing: Delete one item from the list, and do check once again
+    * */
+    @Test
+    fun todoRepository_taskList_deleteTask_returnNoElement() = runTest {
+        // Given one sample data
+        val oneData = dummyTaskList.random().asDomainModel()
+
+        // When deleted
+        repository.deleteTask(oneData)
+
+        // Then response is error because return no element
+        repository.getTask(oneData.id).test {
+            val exception = awaitError()
+            assertThat(exception, instanceOf(NoSuchElementException::class.java))
+        }
+    }
+
+
+    /*
+    * Expected: Task type/category got deleted
+    * Testing: Delete the type and check for the data once again
+    * */
+    @Test
+    fun todoRepository_typeList_deleteType_returnNoElement() = runTest {
+        // Given one sample data
+        val oneData = dummyTypeList.random().toDomainModel()
+
+        // When deleted
+        repository.deleteTaskType(oneData)
+
+        // Then response error while searching for it
+        repository.getTaskTypeOne(oneData.id).collect { errorData ->
+
+            delay(1_000)
+            val data = if(errorData is Result.Error) errorData.exception else null
+
+            assertNotNull(data)
+            assertThat(data, instanceOf(NoSuchElementException::class.java))
+            assertThat(errorData, equalTo(Result.Error(NoSuchElementException("Unknown Category"))))
+
+
+        }
+    }
+
+
+    /*
+    * Expected: Changing color from Green to Black
+    * Testing: Give new data with green color value, save it, and update with check its value
+    * */
+    @Test
+    fun todoRepository_typeList_changeColor() = runTest {
+        // Given one sample data
+        val oneData = TaskTypeModel(
+            id = 99,
+            name = "lorem ipsum i guess",
+            color = CardColor.DARK_GREEN
+        )
+
+        // When adding the sample data
+        repository.saveTaskType(oneData)
+        repository.getTaskTypeOne(oneData.id).collect{
+            assertThat(it, equalTo(Result.Success(oneData)))
+        }
+
+        delay(1000)
+
+        // Then update the color value and check for updated
+        oneData.color = CardColor.BLACK
+        repository.updateTypeColorValue(oneData)
+        repository.getTaskTypeOne(oneData.id).collect{
+            val data = if(it is Result.Success) it.data else null
+            assertNotNull(data)
+            assertThat(data?.color, equalTo(CardColor.BLACK))
+        }
+    }
+
+
+    // Just extension
+    private fun TaskTypeEntity.toDomainModel() : TaskTypeModel {
+        return TaskTypeModel(id, name, color, date_created)
     }
 }
