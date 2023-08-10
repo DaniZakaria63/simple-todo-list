@@ -11,28 +11,26 @@ import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.ui.theme.CardColor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.createTestCoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
-import org.hamcrest.CoreMatchers.sameInstance
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.isNotNull
-import kotlin.time.Duration.Companion.seconds
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.verify
 
 
 /*
@@ -41,7 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 internal class TodoRepositoryTest {
-    private val dummyTaskList = List<TaskEntity>(3) { index ->
+    private val dummyTaskList = List(3) { index ->
         TaskEntity(
             index,
             if (index % 2 == 0) 1 else 2,
@@ -116,20 +114,43 @@ internal class TodoRepositoryTest {
 
 
     /*
+    * Expected: Handling error to be wrapped in Result.Error
+    * Testing: Do mock to fakeTypeDao and check for the result
+    * */
+    @Test
+    fun todoRepository_retrieveAll_returnError() = runTest {
+        // Given spy to type object
+        val spyType = spy(fakeTypeDao)
+        doReturn(flow<Map<TaskTypeEntity, List<TaskEntity>>>{
+            throw NoSuchElementException("No data provided")
+        }).`when`(spyType).findAllWithTask()
+
+        // When that custom error actual happened
+        repository = TodoRepository(fakeTaskDao, spyType, UnconfinedTestDispatcher())
+        repository.observeTypes().collect {
+
+            // Then check for the handler
+            assertThat(it, equalTo(
+                Result.Error(NoSuchElementException("No data provided"))
+            ))
+        }
+        verify(spyType).findAllWithTask()
+    }
+
+
+    /*
     * Expected: All type data with its tasks list
     * Testing: Retrieve all type data, then check the task list value
     * */
     @Test
     fun todoRepository_getTypeAndTask_checkBothValue() = runTest {
         // When type and tasks observed
-        repository.observeTypes().collect {
+        repository.observeTypes().collect { it ->
 
             // Then check for all type, and for each task list
-            val response = it
-            val typeTasks = if (response is Result.Success) response.data else null
+            val typeTasks = if (it is Result.Success) it.data else null
 
-            delay(1_000)
-            System.out.println("Size ${typeTasks?.size}")
+            println("Size ${typeTasks?.size}")
 
             assertThat(typeTasks, notNullValue()) // typeTask not null
             assertThat(typeTasks?.count(), equalTo(2)) // typeTask size should be 2
@@ -138,7 +159,7 @@ internal class TodoRepositoryTest {
                 equalTo(2)
             ) // first task size of typeTask should be 2
 
-            System.out.println("Size2 ${typeTasks?.size}")
+            println("Size2 ${typeTasks?.size}")
         }
     }
 
@@ -210,8 +231,6 @@ internal class TodoRepositoryTest {
             awaitComplete()
         }
 
-        delay(1_000)
-
         // When try to update again
         repository.updateTask(oneData.apply { this.isFinished = false })
 
@@ -264,7 +283,6 @@ internal class TodoRepositoryTest {
         // Then response error while searching for it
         repository.getTaskTypeOne(oneData.id).collect { errorData ->
 
-            delay(1_000)
             val data = if(errorData is Result.Error) errorData.exception else null
 
             assertNotNull(data)
@@ -294,8 +312,6 @@ internal class TodoRepositoryTest {
         repository.getTaskTypeOne(oneData.id).collect{
             assertThat(it, equalTo(Result.Success(oneData)))
         }
-
-        delay(1000)
 
         // Then update the color value and check for updated
         oneData.color = CardColor.BLACK

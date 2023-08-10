@@ -2,6 +2,8 @@ package com.daniza.simple.todolist.ui.widget.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,7 +15,7 @@ import com.daniza.simple.todolist.ui.single_task.SingleTaskScreen
 @Composable
 fun TodoNavHost(
     navController: NavHostController,
-    viewModel: MainViewModel,
+    mainViewModel: MainViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -22,13 +24,13 @@ fun TodoNavHost(
         modifier = modifier
     ) {
         composable(route = MainDestination.route) {
-            MainScreen(viewModel = viewModel) { typeTaskId ->
+            MainScreen(mainViewModel = mainViewModel) { typeTaskId ->
                 navController.navigateToSingleTask(typeTaskId)
             }
         }
 
         composable(route = AnalysisDestination.route) {
-            AnalyticScreen(mainViewModel = viewModel)
+            AnalyticScreen()
 //            navController.navigateSingleTopTo(SettingDestination.route)
         }
 
@@ -39,7 +41,10 @@ fun TodoNavHost(
         ) { navBackStackEntry ->
             val taskType =
                 navBackStackEntry.arguments?.getInt(SingleTaskDestination.taskTypeArgs)
-            SingleTaskScreen(mainViewModel = viewModel, type = taskType){
+            SingleTaskScreen(
+                type = taskType,
+                mainViewModel = mainViewModel
+            ){
                 navController.popBackStack()
             }
         }

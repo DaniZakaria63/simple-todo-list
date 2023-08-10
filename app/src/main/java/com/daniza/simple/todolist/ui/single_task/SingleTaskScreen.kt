@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.daniza.simple.todolist.data.model.TaskModel
 import com.daniza.simple.todolist.data.model.TaskTypeModel
 import com.daniza.simple.todolist.ui.main.MainViewModel
@@ -56,7 +57,7 @@ import com.daniza.simple.todolist.ui.widget.common.CustomSelectorDialog
 
 @Composable
 fun SingleTaskScreen(
-    mainViewModel: MainViewModel,
+    mainViewModel: MainViewModel = viewModel(),
     type: Int? = 0,
     onPopBack: () -> Unit,
 ) {

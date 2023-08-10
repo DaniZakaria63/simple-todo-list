@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.daniza.simple.todolist.ui.theme.TodoTheme
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TodoTheme {
-                MainActivityModule(viewModel = mainViewModel)
+                MainActivityModule(mainViewModel)
             }
         }
     }
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainActivityModule(
-    viewModel: MainViewModel
+    mainViewModel: MainViewModel = viewModel()
 ) {
     Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 5.dp) {
 
@@ -58,7 +60,7 @@ fun MainActivityModule(
         ) { innerPadding ->
             TodoNavHost(
                 navController = navController,
-                viewModel = viewModel,
+                mainViewModel = mainViewModel,
                 modifier = Modifier.padding(innerPadding)
             )
         }

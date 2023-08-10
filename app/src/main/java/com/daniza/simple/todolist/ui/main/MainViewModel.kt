@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.daniza.simple.todolist.DefaultDispatcherProvider
+import com.daniza.simple.todolist.DispatcherProvider
 import com.daniza.simple.todolist.TodoApplication
 import com.daniza.simple.todolist.data.model.StatisticsModel
 import com.daniza.simple.todolist.data.model.TaskModel
@@ -15,61 +17,96 @@ import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.data.source.TaskRepository
 import com.daniza.simple.todolist.data.source.TaskUiState
 import com.daniza.simple.todolist.ui.theme.CardColor
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 
 class MainViewModel(
-    private val repository: TaskRepository
+    private val repository: TaskRepository,
+    private val dispatcher: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
+    private val coroutineErrorHandler = CoroutineExceptionHandler { context, exception ->
+        Log.e("ASD", "saveNewTaskType: ", exception)
+        viewModelScope.launch(dispatcher.main) {
+            _errorStatus.emit(value = true)
+        }
+    }
+
+    private val errorHandler: (() -> Unit) -> Unit = { emit ->
+        viewModelScope.launch(dispatcher.main) {
+            try {
+                emit()
+            }catch (e: Throwable){
+                _errorStatus.emit(true)
+            }
+        }
+    }
+
     private val _allTasksTypeData: MutableStateFlow<TaskUiState<TaskTypeModel>> =
         MutableStateFlow(TaskUiState(isLoading = true))
 
-    val allTasksTypeData: Flow<TaskUiState<TaskTypeModel>>
-        get() = _allTasksTypeData
-
+    val allTasksTypeData: StateFlow<TaskUiState<TaskTypeModel>>
+        get() = _allTasksTypeData.asStateFlow()
 
     private val _singleTasksTypeData: MutableStateFlow<TaskUiState<TaskTypeModel>> =
         MutableStateFlow(TaskUiState(isLoading = true))
-    val singleTasksTypeData: Flow<TaskUiState<TaskTypeModel>> get() = _singleTasksTypeData
+    val singleTasksTypeData: Flow<TaskUiState<TaskTypeModel>> get() = _singleTasksTypeData.asStateFlow()
 
+    private val _errorStatus = MutableSharedFlow<Boolean>(replay = 0)
+    val errorStatus = _errorStatus.asSharedFlow()
 
     init {
-        viewModelScope.launch {
-            launch {
-                repository.observeTypes()
-                    .map { result -> parseResult(result, LIST_DATA){
+        getAllTaskType()
+    }
+
+    private fun getAllTaskType() {
+        viewModelScope.launch(dispatcher.main) {
+            _allTasksTypeData.value = TaskUiState(isLoading = true)
+            repository.observeTypes().flowOn(dispatcher.io)
+                .map { result ->
+                    parseResult(result, LIST_DATA) {
                         it.sortedByDescending { item -> item.id }
                     }
-                    }.collect {
-                        _allTasksTypeData.value = it
-                    }
-            }
+                }.collect {
+                    _allTasksTypeData.value = it
+                }
         }
     }
 
 
     fun getOneTaskType(taskId: Int) {
-        viewModelScope.launch {
-            repository.getTaskTypeOne(taskId).map { result ->
-                parseResult(result, SINGLE_DATA)
-            }.collect {
-                _singleTasksTypeData.value = it
-            }
+        viewModelScope.launch(dispatcher.main) {
+            repository.getTaskTypeOne(taskId).flowOn(dispatcher.io)
+                .map { result ->
+                    parseResult(result, SINGLE_DATA)
+                }.collect {
+                    _singleTasksTypeData.value = it
+                }
         }
     }
 
 
-    private fun <T> parseResult(result: Result<T>, type: Int, callback:(List<TaskTypeModel>) -> List<TaskTypeModel>? = {null}): TaskUiState<TaskTypeModel> {
+    private fun <T> parseResult(
+        result: Result<T>,
+        type: Int,
+        callback: (List<TaskTypeModel>) -> List<TaskTypeModel>? = { null }
+    ): TaskUiState<TaskTypeModel> {
         return when (result) {
             is Result.Success -> TaskUiState(
                 dataSingle = if (type == SINGLE_DATA) result.data as TaskTypeModel else null,
@@ -83,21 +120,22 @@ class MainViewModel(
 
 
     fun saveNewTaskType(type: TaskTypeModel) {
-        try{
+        errorHandler {
             repository.saveTaskType(type)
-        }catch (e: IllegalArgumentException){
-            Log.e("ASD", "saveNewTaskType: ", e)
         }
     }
 
 
     fun deleteTaskType(type: TaskTypeModel) {
-        repository.deleteTaskType(type)
+        errorHandler {
+            repository.deleteTaskType(type)
+        }
     }
 
 
     /*its okay to make all saved data always hot*/
-    /*val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
+    /* Deprecated method from UI 1st version
+    val allListData : Flow<Result<List<TaskModel>>> get() = repository.observeTasks()
     val allListData: SharedFlow<TaskUiState<TaskModel>>
         get() = repository.observeTasks()
             .map { result ->
@@ -126,7 +164,9 @@ class MainViewModel(
     /*the primary information in todolist is title*/
     fun saveNewTask(typeId: Int, task: TaskModel) {
         task.type_id = typeId
-        repository.saveTask(task)
+        errorHandler{
+            repository.saveTask(task)
+        }
     }
 
     fun editTask(typeId: Int, task: TaskModel, newTask: TaskModel) {
@@ -136,12 +176,16 @@ class MainViewModel(
             dateCreated = task.dateCreated
             isFinished = task.isFinished
         }
-        repository.updateTask(newTask)
+        errorHandler{
+            repository.updateTask(newTask)
+        }
     }
 
     /*just delete*/
     fun deleteTask(task: TaskModel) {
-        repository.deleteTask(task)
+        errorHandler{
+            repository.deleteTask(task)
+        }
     }
 
     fun updateColorValue(typeModel: TaskTypeModel, color: CardColor) {
@@ -153,6 +197,8 @@ class MainViewModel(
     val allStatisticsData: Flow<TaskUiState<StatisticsModel>>
         get() =
             repository.provideStatisticsData()
+                .flowOn(dispatcher.io)
+                .onStart { TaskUiState<StatisticsModel>(isLoading = true) }
                 .map { item -> TaskUiState(dataList = item) }
                 .catch { TaskUiState<StatisticsModel>(isError = true) }
                 .shareIn(viewModelScope, SharingStarted.Lazily)

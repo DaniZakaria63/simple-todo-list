@@ -43,7 +43,7 @@ class TodoRepository(
 
     /*TaskType Data Provider and Manipulation*/
     override suspend fun observeTypes(): Flow<Result<List<TaskTypeModel>>> =
-        withContext(dispatcher) {
+        coroutineScope {
             typeDao.findAllWithTask().map { map -> // Map<TaskTypeEntity, List<TaskEntity>>
                 val extractedType: List<TaskTypeModel> = parseTypeMapToList(map)
                 Result.Success(extractedType)
@@ -59,7 +59,7 @@ class TodoRepository(
     * - get also the color (optional)
     * */
     override suspend fun getTaskTypeOne(typeId: Int): Flow<Result<TaskTypeModel>> =
-        withContext(dispatcher) {
+        coroutineScope {
             typeDao.findOneWithTask(typeId).map { map ->
                 val extractedType: TaskTypeModel = parseTypeMapToList(map).get(0)
                 Result.Success(extractedType)
@@ -103,7 +103,7 @@ class TodoRepository(
 
     /*Tasks Data Provider and Manipulation*/
     override suspend fun observeTasks(): Flow<Result<List<TaskModel>>> =
-        withContext(dispatcher) {
+        coroutineScope {
             taskDao.findAll().map { value ->
                 Result.Success(value.asDomainsModel())
             }.catch {
@@ -112,7 +112,7 @@ class TodoRepository(
         }
 
     override suspend fun getTask(taskId: Int): Flow<Result<TaskModel>> =
-        withContext(dispatcher) {
+        coroutineScope {
             taskDao.findOne(taskId).map { value ->
                 Result.Success(value.asDomainModel())
             }
@@ -120,7 +120,7 @@ class TodoRepository(
 
 
     override suspend fun observeTypeOne(typeId: String): Flow<Result<List<TaskModel>>> =
-        withContext(dispatcher) {
+        coroutineScope {
             taskDao.findAllWithType(typeId).map { value ->
                 Result.Success(value.asDomainsModel())
             }.catch {
@@ -130,19 +130,19 @@ class TodoRepository(
 
 
     override fun saveTask(task: TaskModel) {
-        scope.launch {
+        scope.launch(dispatcher) {
             taskDao.saveOne(task.asDatabaseModel())
         }
     }
 
     override fun updateTask(task: TaskModel) {
-        scope.launch {
+        scope.launch(dispatcher) {
             taskDao.updateOne(task.asDatabaseModel())
         }
     }
 
     override fun deleteTask(task: TaskModel) {
-        scope.launch {
+        scope.launch(dispatcher) {
             taskDao.deleteOne(task.asDatabaseModel())
         }
     }
@@ -151,28 +151,34 @@ class TodoRepository(
     /* Statistical Code Type */
     override fun provideStatisticsData(): Flow<List<StatisticsModel>> = flow {
         val statistic: ArrayList<StatisticsModel> = ArrayList()
-        val total_task_type: Int = provideAllTypeCount()
-        val task_type_list: List<TaskTypeEntity> = provideAllTask()
+        val total_task_type = scope.async {
+            return@async provideAllTypeCount()
+        }
+        val task_type_list = scope.async {
+            return@async provideAllTask()
+        }
 
         statistic.add(
             StatisticsModel(
                 "Categories",
                 "Total categories of task",
-                total_task_type.toString()
+                total_task_type.await().toString()
             )
         )
-        task_type_list.forEachIndexed { index, type ->
-            val total_task_count = provideTaskCountByType(type.id)
+        task_type_list.await().forEachIndexed { _, type ->
+            val total_task_count = scope.async {
+                return@async provideTaskCountByType(type.id)
+            }
             statistic.add(
                 StatisticsModel(
                     type.name,
                     type.name,
-                    total_task_count.toString()
+                    total_task_count.await().toString()
                 )
             )
         }
 
-        val taskAnalytic: TaskAnalyticModel = provideAllTaskCount()
+        val taskAnalytic = scope.async { provideAllTaskCount() }.await()
         statistic.add(StatisticsModel("Total Task", "", taskAnalytic.total.toString()))
         statistic.add(StatisticsModel("Finished Task", "", taskAnalytic.finished.toString()))
         statistic.add(StatisticsModel("Task Active", "", taskAnalytic.active.toString()))

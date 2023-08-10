@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.daniza.simple.todolist.data.model.TaskModel
@@ -46,7 +48,7 @@ import com.daniza.simple.todolist.ui.widget.task_type.TaskTypeCardList
 
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel,
+    mainViewModel: MainViewModel = viewModel(),
     toSingleTask: (Int) -> Unit,
 ) {
     var showSplashScreen by remember { mutableStateOf(false) } // default is false
@@ -56,7 +58,7 @@ fun MainScreen(
         }
     } else {
         TodoListScene(
-            mainViewModel = viewModel,
+            mainViewModel = mainViewModel,
             modifier = Modifier.fillMaxSize(),
             onCardClicked = toSingleTask
         )
@@ -70,7 +72,6 @@ private fun TodoListScene(
     onCardClicked: (Int) -> Unit,
     mainViewModel: MainViewModel = viewModel()
 ) {
-
     var showNewDialog by remember { mutableStateOf(false) }
     val listTaskType: TaskUiState<TaskTypeModel> by mainViewModel.allTasksTypeData.collectAsStateWithLifecycle(
         initialValue = TaskUiState<TaskTypeModel>(isLoading = true)
@@ -85,6 +86,7 @@ private fun TodoListScene(
 
     when (listTaskType.status) {
         Status.DATA -> TodoTaskTypeContent(
+            modifier = modifier.fillMaxSize(),
             listTaskType = listTaskType.dataList!!,
             onCardClicked = onCardClicked,
             onCheckChanged = { task, b ->
@@ -105,12 +107,13 @@ private fun TodoListScene(
 
 @Composable
 private fun TodoTaskTypeContent(
+    modifier: Modifier = Modifier,
     listTaskType: List<TaskTypeModel> = listOf(),
     onCardClicked: (Int) -> Unit,
     onCheckChanged: (TaskModel, Boolean) -> Unit,
     onButtonAddClicked: () -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.padding(24.dp))
 

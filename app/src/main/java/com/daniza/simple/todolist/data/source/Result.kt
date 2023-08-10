@@ -28,3 +28,4 @@ fun <T> Flow<T>.asResult() : Flow<Result<T>> {
         Result.Success(it)
     }
 }
+
