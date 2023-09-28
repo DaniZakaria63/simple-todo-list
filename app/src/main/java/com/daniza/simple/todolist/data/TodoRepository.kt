@@ -1,5 +1,6 @@
 package com.daniza.simple.todolist.data
 
+import com.daniza.simple.todolist.DispatcherProvider
 import com.daniza.simple.todolist.data.local.task.TaskDao
 import com.daniza.simple.todolist.data.local.task.TaskEntity
 import com.daniza.simple.todolist.data.local.task.asDomainsModel
@@ -28,22 +29,23 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.IllegalArgumentException
+import javax.inject.Inject
 import kotlin.jvm.Throws
 
 const val DB_THROWABLE_MESSAGE = "Check application database for task type table"
 
-class TodoRepository(
+class TodoRepository constructor(
     private val taskDao: TaskDao,
     private val typeDao: TypeDao,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val dispatcher: DispatcherProvider
 ) : TaskRepository {
 
     /*Coroutine Scope run independently for avoiding state-loss in view-model*/
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+    private val scope = CoroutineScope(dispatcher.io + SupervisorJob())
 
     /*TaskType Data Provider and Manipulation*/
     override suspend fun observeTypes(): Flow<Result<List<TaskTypeModel>>> =
-        coroutineScope {
+        withContext(dispatcher.io) {
             typeDao.findAllWithTask().map { map -> // Map<TaskTypeEntity, List<TaskEntity>>
                 val extractedType: List<TaskTypeModel> = parseTypeMapToList(map)
                 Result.Success(extractedType)
@@ -59,7 +61,7 @@ class TodoRepository(
     * - get also the color (optional)
     * */
     override suspend fun getTaskTypeOne(typeId: Int): Flow<Result<TaskTypeModel>> =
-        coroutineScope {
+        withContext(dispatcher.io) {
             typeDao.findOneWithTask(typeId).map { map ->
                 val extractedType: TaskTypeModel = parseTypeMapToList(map).get(0)
                 Result.Success(extractedType)
@@ -83,20 +85,20 @@ class TodoRepository(
     @Throws(IllegalArgumentException::class)
     override fun saveTaskType(type: TaskTypeModel) {
         if (type.name.isEmpty() || type.name.equals("-")) throw IllegalArgumentException("Category name cannot be empty")
-        scope.launch {
+        scope.launch(dispatcher.io) {
             typeDao.saveOne(type.asDatabaseModel())
         }
     }
 
     override fun deleteTaskType(type: TaskTypeModel) {
-        scope.launch {
+        scope.launch(dispatcher.io) {
             typeDao.deleteOne(type.asDatabaseModel())
         }
     }
 
 
     override fun updateTypeColorValue(type: TaskTypeModel) {
-        scope.launch {
+        scope.launch(dispatcher.io) {
             typeDao.updateOne(type.asDatabaseModel())
         }
     }
@@ -130,19 +132,19 @@ class TodoRepository(
 
 
     override fun saveTask(task: TaskModel) {
-        scope.launch(dispatcher) {
+        scope.launch((dispatcher.io)) {
             taskDao.saveOne(task.asDatabaseModel())
         }
     }
 
     override fun updateTask(task: TaskModel) {
-        scope.launch(dispatcher) {
+        scope.launch(dispatcher.io) {
             taskDao.updateOne(task.asDatabaseModel())
         }
     }
 
     override fun deleteTask(task: TaskModel) {
-        scope.launch(dispatcher) {
+        scope.launch(dispatcher.io) {
             taskDao.deleteOne(task.asDatabaseModel())
         }
     }

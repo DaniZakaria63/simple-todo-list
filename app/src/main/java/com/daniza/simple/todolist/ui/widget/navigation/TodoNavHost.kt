@@ -15,7 +15,6 @@ import com.daniza.simple.todolist.ui.single_task.SingleTaskScreen
 @Composable
 fun TodoNavHost(
     navController: NavHostController,
-    mainViewModel: MainViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -24,14 +23,13 @@ fun TodoNavHost(
         modifier = modifier
     ) {
         composable(route = MainDestination.route) {
-            MainScreen(mainViewModel = mainViewModel) { typeTaskId ->
+            MainScreen { typeTaskId ->
                 navController.navigateToSingleTask(typeTaskId)
             }
         }
 
         composable(route = AnalysisDestination.route) {
             AnalyticScreen()
-//            navController.navigateSingleTopTo(SettingDestination.route)
         }
 
         composable(
@@ -42,8 +40,7 @@ fun TodoNavHost(
             val taskType =
                 navBackStackEntry.arguments?.getInt(SingleTaskDestination.taskTypeArgs)
             SingleTaskScreen(
-                type = taskType,
-                mainViewModel = mainViewModel
+                type = taskType
             ){
                 navController.popBackStack()
             }

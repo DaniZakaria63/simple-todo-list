@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ import com.daniza.simple.todolist.ui.widget.task_type.TaskTypeCardList
 
 @Composable
 fun MainScreen(
-    mainViewModel: MainViewModel = viewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     toSingleTask: (Int) -> Unit,
 ) {
     var showSplashScreen by remember { mutableStateOf(false) } // default is false
@@ -57,53 +58,36 @@ fun MainScreen(
             showSplashScreen = false
         }
     } else {
-        TodoListScene(
-            mainViewModel = mainViewModel,
-            modifier = Modifier.fillMaxSize(),
-            onCardClicked = toSingleTask
-        )
+        var showNewDialog by remember { mutableStateOf(false) }
+        val listTaskType: TaskUiState<TaskTypeModel> by mainViewModel.allTasksTypeData.collectAsStateWithLifecycle()
+
+        if (showNewDialog) {
+            TaskTypeDialog(callback = { task, status ->
+                showNewDialog = false
+                if (status == Status.DATA) mainViewModel.saveNewTaskType(task!!)
+            })
+        }
+
+        when (listTaskType.status) {
+            Status.DATA -> TodoTaskTypeContent(
+                modifier = Modifier.fillMaxSize(),
+                listTaskType = listTaskType.dataList!!,
+                onCardClicked = toSingleTask,
+                onCheckChanged = { task, b ->
+                    mainViewModel.updateCheckedTask(task, b)
+                },
+                onButtonAddClicked = { showNewDialog = true }
+            )
+
+            Status.ERROR -> ErrorScreen(
+                message = "Refresh please",
+                onTimeout = { }
+            )
+
+            Status.LOADING -> LoadingScreen()
+        }
     }
 }
-
-
-@Composable
-private fun TodoListScene(
-    modifier: Modifier = Modifier,
-    onCardClicked: (Int) -> Unit,
-    mainViewModel: MainViewModel = viewModel()
-) {
-    var showNewDialog by remember { mutableStateOf(false) }
-    val listTaskType: TaskUiState<TaskTypeModel> by mainViewModel.allTasksTypeData.collectAsStateWithLifecycle(
-        initialValue = TaskUiState<TaskTypeModel>(isLoading = true)
-    )
-
-    if (showNewDialog) {
-        TaskTypeDialog(callback = { task, status ->
-            showNewDialog = false
-            if (status == Status.DATA) mainViewModel.saveNewTaskType(task!!)
-        })
-    }
-
-    when (listTaskType.status) {
-        Status.DATA -> TodoTaskTypeContent(
-            modifier = modifier.fillMaxSize(),
-            listTaskType = listTaskType.dataList!!,
-            onCardClicked = onCardClicked,
-            onCheckChanged = { task, b ->
-                mainViewModel.updateCheckedTask(task, b)
-            },
-            onButtonAddClicked = { showNewDialog = true }
-        )
-
-        Status.ERROR -> ErrorScreen(
-            message = "Refresh please",
-            onTimeout = { }
-        )
-
-        Status.LOADING -> LoadingScreen()
-    }
-}
-
 
 @Composable
 private fun TodoTaskTypeContent(
@@ -139,7 +123,6 @@ private fun TodoTaskTypeContent(
                     },
                     style = MaterialTheme.typography.headlineLarge
                 )
-//                Divider(color = Color.Black) // TODO: Update this into similar like the mockup
             }
 
             Spacer(modifier = Modifier.padding(24.dp))

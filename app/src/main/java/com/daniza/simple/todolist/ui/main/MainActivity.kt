@@ -23,46 +23,39 @@ import com.daniza.simple.todolist.ui.widget.navigation.TodoNavHost
 import com.daniza.simple.todolist.ui.widget.navigation.TodoTabRow
 import com.daniza.simple.todolist.ui.widget.navigation.navigateSingleTopTo
 import com.daniza.simple.todolist.ui.widget.navigation.todoTabRowScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val mainViewModel: MainViewModel by viewModels { MainViewModel.Factory }
-
         setContent {
             TodoTheme {
-                MainActivityModule(mainViewModel)
+                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 5.dp) {
+
+                    val navController = rememberNavController()
+                    val currentBackStack by navController.currentBackStackEntryAsState()
+                    val currentDestination = currentBackStack?.destination
+
+                    // extract current screen state for top bar animation
+                    val currentScreen: TodoDestination =
+                        todoTabRowScreen.find { it.route == currentDestination?.route } ?: MainDestination
+
+                    Scaffold(
+                        topBar = {
+                            TodoTabRow(allScreens = todoTabRowScreen, onTabSelected = { screen ->
+                                navController.navigateSingleTopTo(screen.route)
+                            }, currentScreen = currentScreen)
+                        }
+                    ) { innerPadding ->
+                        TodoNavHost(
+                            navController = navController,
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
+                }
             }
-        }
-    }
-}
-
-@Composable
-fun MainActivityModule(
-    mainViewModel: MainViewModel = viewModel()
-) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 5.dp) {
-
-        val navController = rememberNavController()
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination
-
-        // extract current screen state for top bar animation
-        var currentScreen: TodoDestination =
-            todoTabRowScreen.find { it.route == currentDestination?.route } ?: MainDestination
-
-        Scaffold(
-            topBar = {
-                TodoTabRow(allScreens = todoTabRowScreen, onTabSelected = { screen ->
-                    navController.navigateSingleTopTo(screen.route)
-                }, currentScreen = currentScreen)
-            }
-        ) { innerPadding ->
-            TodoNavHost(
-                navController = navController,
-                mainViewModel = mainViewModel,
-                modifier = Modifier.padding(innerPadding)
-            )
         }
     }
 }

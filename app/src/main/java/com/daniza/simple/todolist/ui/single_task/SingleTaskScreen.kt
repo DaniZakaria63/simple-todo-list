@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.daniza.simple.todolist.data.model.TaskModel
@@ -57,24 +59,19 @@ import com.daniza.simple.todolist.ui.widget.common.CustomSelectorDialog
 
 @Composable
 fun SingleTaskScreen(
-    mainViewModel: MainViewModel = viewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     type: Int? = 0,
     onPopBack: () -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(TaskDialogType.NOTHING) }
     var stateTask by remember { mutableStateOf(TaskModel(type_id = type ?: 0)) }
 
-    /* Listening to the parent which is TaskTypeModel within its value*/
     val taskTypeModel: TaskUiState<TaskTypeModel> by mainViewModel.singleTasksTypeData
-        .collectAsStateWithLifecycle(initialValue = TaskUiState(isLoading = true))
+        .collectAsStateWithLifecycle()
 
-    mainViewModel.getOneTaskType(type ?: 0)
-    /* Listening into list of TaskModel, focusing on the list // Deprecated
-    val listTask: TaskUiState<TaskModel> by mainViewModel.updateStateTaskType(type.toString())
-        .collectAsStateWithLifecycle(
-            initialValue = TaskUiState<TaskModel>(isLoading = true)
-        )
-     */
+    LaunchedEffect(type){
+        mainViewModel.getOneTaskType(type ?: 0)
+    }
 
     /* Show the dialog first, double checking */
     when (showDialog) {

@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.daniza.simple.todolist.data.model.StatisticsModel
@@ -30,7 +31,7 @@ import com.daniza.simple.todolist.ui.main.MainViewModel
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AnalyticScreen(
-    mainViewModel: MainViewModel = viewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val statisticsData: TaskUiState<StatisticsModel> by mainViewModel.allStatisticsData

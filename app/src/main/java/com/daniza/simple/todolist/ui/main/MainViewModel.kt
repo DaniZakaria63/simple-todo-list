@@ -17,6 +17,8 @@ import com.daniza.simple.todolist.data.source.Result
 import com.daniza.simple.todolist.data.source.TaskRepository
 import com.daniza.simple.todolist.data.source.TaskUiState
 import com.daniza.simple.todolist.ui.theme.CardColor
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -36,10 +38,12 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import javax.inject.Inject
 
-class MainViewModel(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     private val repository: TaskRepository,
-    private val dispatcher: DispatcherProvider = DefaultDispatcherProvider()
+    private val dispatcher: DispatcherProvider
 ) : ViewModel() {
     private val coroutineErrorHandler = CoroutineExceptionHandler { context, exception ->
         Log.e("ASD", "saveNewTaskType: ", exception)
@@ -66,7 +70,7 @@ class MainViewModel(
 
     private val _singleTasksTypeData: MutableStateFlow<TaskUiState<TaskTypeModel>> =
         MutableStateFlow(TaskUiState(isLoading = true))
-    val singleTasksTypeData: Flow<TaskUiState<TaskTypeModel>> get() = _singleTasksTypeData.asStateFlow()
+    val singleTasksTypeData: StateFlow<TaskUiState<TaskTypeModel>> get() = _singleTasksTypeData.asStateFlow()
 
     private val _errorStatus = MutableSharedFlow<Boolean>(replay = 0)
     val errorStatus = _errorStatus.asSharedFlow()
@@ -194,7 +198,7 @@ class MainViewModel(
     }
 
     /* Statistical listener*/
-    val allStatisticsData: Flow<TaskUiState<StatisticsModel>>
+    val allStatisticsData: SharedFlow<TaskUiState<StatisticsModel>>
         get() =
             repository.provideStatisticsData()
                 .flowOn(dispatcher.io)
@@ -206,11 +210,5 @@ class MainViewModel(
     companion object {
         private const val SINGLE_DATA = 1
         private const val LIST_DATA = 2
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application: TodoApplication = (this[APPLICATION_KEY]) as TodoApplication
-                MainViewModel(application.repository)
-            }
-        }
     }
 }

@@ -23,7 +23,8 @@ object ServiceLocator {
     private fun createTodoRepository(context: Context) : TodoRepository{
         val newRepo =TodoRepository(
             createTaskDao(context),
-            createTypeTaskDao(context)
+            createTypeTaskDao(context),
+            DefaultDispatcherProvider()
         )
 
         repository = newRepo
